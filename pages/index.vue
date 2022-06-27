@@ -267,7 +267,7 @@ export default {
                 linhaZ.push(0)
             }
 
-            this.linhas.push(linhaZ);
+            this.linhas.unshift(linhaZ);
 
             console.log(this.linhas)
         },
