@@ -7,7 +7,7 @@
                         <v-card-text>
                             <v-row>
                                 <v-col>
-                                    <v-select :items="items" v-model.number="form.to">
+                                    <v-select :items="items" v-model="form.to">
                                     </v-select>
                                 </v-col>
                                 <v-col>
@@ -39,7 +39,8 @@
                                 <v-row>
                                     <v-col>
                                         <v-text-field
-                                            type="number" step="0.1"
+                                            type="number"
+                                            step="0.1"
                                             label="X1"
                                             v-model.number="
                                                 form.constrained[index].vars[0]
@@ -48,7 +49,8 @@
                                     </v-col>
                                     <v-col>
                                         <v-text-field
-                                            type="number" step="0.1"
+                                            type="number"
+                                            step="0.1"
                                             label="X2"
                                             v-model.number="
                                                 form.constrained[index].vars[1]
@@ -64,7 +66,8 @@
                                     </v-col>
                                     <v-col>
                                         <v-text-field
-                                            type="number" step="0.1"
+                                            type="number"
+                                            step="0.1"
                                             v-model.number="
                                                 form.constrained[index].const
                                             "
@@ -75,7 +78,7 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer />
-                            <v-btn
+                            <v-btn v-if="!calculated"
                                 type="submit"
                                 class="align-right"
                                 color="primary"
@@ -86,8 +89,29 @@
                     </form>
                 </v-card>
                 <v-card>
-                    <v-card-text>
-                        <v-row>
+                    <v-card-text >
+                        <v-simple-table dense v-if="calculated">
+                            <thead>
+                                <tr>
+                                    <th>L</th>
+                                    <th>x1</th>
+                                    <th>x2</th>
+                                    <th>x3</th>
+                                    <th>x4</th>
+                                    <th>x5</th>
+                                    <th>x6</th>
+                                    <th>b</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(lines, i) in linhas" :key="i">
+                                    <td>{{ i }}</td>
+
+<td v-for="(li, j) in lines" :key="j">{{ li }}</td>
+                                </tr>
+                            </tbody>
+                        </v-simple-table>
+                        <!-- <v-row>
                             <v-col>
                                 {{ form.to }} Z = {{ form.f[0] }}x1
                                 {{ form.f[1] }}x2 <br />
@@ -106,24 +130,7 @@
                                     {{ form.constrained[index].excesso }}
                                 </div>
                             </v-col>
-                        </v-row>
-                        <!-- <v-simple-table>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th>Z</th>
-                                        <div v-for="value in z" :key="value">
-                                            <th>{{ value }}</th>
-                                        </div>
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-
-                                </tbody>
-                            </table>
-                        </v-simple-table> -->
+                        </v-row> -->
                     </v-card-text>
                 </v-card>
             </v-container>
@@ -138,33 +145,34 @@ export default {
             items: ["MAX", "MIN"],
             to: ["<=", "=", ">="],
             calculated: false,
+            linhas: [],
             form: {
-                f: [0, 0],
+                f: [0.4, 0.5],
                 to: "",
                 constrained: [
                     {
-                        vars: [0, 0],
+                        vars: [0.3, 0.1],
                         to: "",
-                        const: 0,
+                        const: 2.7,
                         folga: [],
                         artificial: [],
-                        excesso: [],
+                        excesso: 0,
                     },
                     {
-                        vars: [0, 0],
+                        vars: [0.5, 0.5],
                         to: "",
-                        const: 0,
+                        const: 6,
                         folga: [],
                         artificial: [],
-                        excesso: [],
+                        excesso: 0,
                     },
                     {
-                        vars: [0, 0],
+                        vars: [0.6, 0.4],
                         to: "",
-                        const: 0,
+                        const: 6,
                         folga: [],
                         artificial: [],
-                        excesso: [],
+                        excesso: 0,
                     },
                 ],
             },
@@ -172,6 +180,14 @@ export default {
     },
     methods: {
         calc() {
+            this.calculated = true;
+
+            if (this.form.to == "MIN") {
+                this.form.f[0] = this.form.f[0] * -1;
+                this.form.f[1] = this.form.f[1] * -1;
+                this.form.to = "MAX";
+            }
+
             for (let index = 0; index < this.form.constrained.length; index++) {
                 if (this.form.constrained[index].to == "<=") {
                     for (let j = 0; j < this.form.constrained.length; j++) {
@@ -193,9 +209,11 @@ export default {
                     for (let j = 0; j < this.form.constrained.length; j++) {
                         if (index == j) {
                             this.form.constrained[index].artificial.push(1);
-                            this.form.constrained[index].excesso.push(-1);
+                            this.form.constrained[index].excesso = -1;
                         } else {
                             this.form.constrained[index].artificial.push(0);
+                                this.form.constrained[index].excesso = 0;
+
                         }
                     }
                 }
@@ -203,35 +221,55 @@ export default {
 
 
 
-    for (let row = 0; row < this.form.constrained.length; row++) {
-        const linha = [];
 
-                    for (let i = 0; i < this.form.constrained[row].vars.length; i++) {
-                linha.push(this.form.constrained[row].vars[i]);
+
+            for (let row = 0; row < this.form.constrained.length; row++) {
+                const linha = [];
+
+                for (
+                    let i = 0;
+                    i < this.form.constrained[row].vars.length;
+                    i++
+                ) {
+                    linha.push(this.form.constrained[row].vars[i]);
+                }
+                for (
+                    let i = 0;
+                    i < this.form.constrained[row].folga.length;
+                    i++
+                ) {
+                    linha.push(this.form.constrained[row].folga[i]);
+                }
+                for (
+                    let i = 0;
+                    i < this.form.constrained[row].artificial.length;
+                    i++
+                ) {
+                    linha.push(this.form.constrained[row].artificial[i]);
+                }
+
+                    linha.push(this.form.constrained[row].excesso);
+                    linha.push(this.form.constrained[row].const);
+
+
+                this.linhas.push(linha);
 
 
             }
-                    for (let i = 0; i < this.form.constrained[row].folga.length; i++) {
-                linha.push(this.form.constrained[row].folga[i]);
+            const linhaZlength = this.linhas[0].length - this.form.constrained[0].vars.length
+                const linhaZ = []
 
-
-            }
-                    for (let i = 0; i < this.form.constrained[row].artificial.length; i++) {
-                linha.push(this.form.constrained[row].artificial[i]);
-
-
-            }
-                    for (let i = 0; i < this.form.constrained[row].excesso.length; i++) {
-                linha.push(this.form.constrained[row].excesso[i]);
-
-
+            for (let i = 0; i < this.form.constrained[0].vars.length; i++) {
+                linhaZ.push(this.form.f[i])
             }
 
-            console.log(linha);
+            for (let i = 0; i < linhaZlength; i++) {
+                linhaZ.push(0)
+            }
 
+            this.linhas.push(linhaZ);
 
-    }
-
+            console.log(this.linhas)
         },
     },
 };
