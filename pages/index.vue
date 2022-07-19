@@ -166,6 +166,30 @@
                             </tbody>
                         </v-simple-table>
                                                 </v-card>
+                <p class="mt-4">Iteração 2</p>
+                <v-card >
+
+                        <v-simple-table dense v-if="calculated">
+                            <thead>
+                                <tr>
+                                    <th>L</th>
+                                    <th>x1</th>
+                                    <th>x2</th>
+                                    <th>x3</th>
+                                    <th>x4</th>
+                                    <th>x5</th>
+                                    <th>x6</th>
+                                    <th>b</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(lines, i) in linhas3" :key="i">
+
+                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
+                                </tr>
+                            </tbody>
+                        </v-simple-table>
+                                                </v-card>
                                                  </div>
             </v-container>
         </v-main>
@@ -181,6 +205,8 @@ export default {
             calculated: false,
             linhas: [],
             linhas1: [],
+            linhas2: [],
+            linhas3: [],
 
             form: {
                 f: [0.4, 0.5],
@@ -253,10 +279,6 @@ export default {
                 }
             }
 
-
-
-
-
             for (let row = 0; row < this.form.constrained.length; row++) {
                 const linha = [];
 
@@ -301,8 +323,14 @@ export default {
             }
 
             for (let i = 0; i < linhaZlength; i++) {
-                linhaZ.push(0)
+                if(i == (linhaZlength - 2)){
+                    linhaZ.push(1)
+                } else {
+                    linhaZ.push(0)
+                }
             }
+
+            console.log('linha z: ' + linhaZ);
 
             this.linhas.unshift(linhaZ);
 
@@ -310,8 +338,6 @@ export default {
             this.linhas[1].unshift('x3')
             this.linhas[2].unshift('x4')
             this.linhas[3].unshift('x5')
-
-            this.linhas1 = this.linhas;
 
             this.linhas1 = JSON.parse(JSON.stringify(this.linhas));
 
@@ -389,6 +415,79 @@ export default {
             }
 
             console.log(this.linhas2)
+
+            // -------------
+
+             const linhas2linha0positiva = [];
+
+            for (let i = 0; i <= 2; i++) {
+                if(this.linhas2[0][i] >= 0){
+
+                    linhas2linha0positiva.push(this.linhas2[0][i])
+                } else {
+
+                    linhas2linha0positiva.push(this.linhas2[0][i] * -1)
+                }
+            }
+
+            console.log('linhas2linha0positiva' + linhas2linha0positiva)
+
+            for (let i = 0; i <= 2; i++) {
+                console.log(linhas2linha0positiva[i])
+                if(linhas2linha0positiva[i+1] > linhas2linha0positiva[i]) {
+                    queEntra = i+1;
+                }
+            }
+
+            console.log(queEntra);
+
+            // var queSai = 0;
+
+            divisao = [];
+            for (let index = 1; index < this.linhas2.length; index++) {
+                divisao.push(parseFloat(this.linhas2[index][7]) / parseFloat(this.linhas2[0][queEntra]));
+
+                for (let index = 0; index < divisao.length; index++) {
+                    if(divisao[index] < 0){
+                        divisao[index] = divisao[index] * -1;
+
+                    }
+                }
+            }
+
+            console.log(divisao);
+
+            for (let index = 0; index <= divisao.length; index++) {
+                                if(divisao[index + 1] < divisao[index]){
+                                    queSai = index +2;
+                                }
+
+                            }
+
+            console.log(queSai);
+
+            this.linhas3 = JSON.parse(JSON.stringify(this.linhas2));
+
+            console.log(this.linhas3)
+
+            for (let index = 0; index < this.linhas3[queSai].length; index++) {
+                this.linhas3[queSai][index] = (this.linhas2[queSai][index] / this.linhas2[queSai][queEntra]);
+            }
+
+            this.linhas3[queSai][0] = 'x2'
+            console.log(this.linhas3)
+
+            for (let index = 0; index < this.linhas3.length; index++) {
+                for (let j = 1; j < this.linhas3[queSai].length; j++) {
+                    if(index != queSai) {
+                        this.linhas3[index][j] = this.linhas2[index][j] - (this.linhas2[index][queEntra] * this.linhas3[queSai][j]);
+                    }
+
+                }
+
+            }
+
+            console.log(this.linhas3)
         },
     },
 };
