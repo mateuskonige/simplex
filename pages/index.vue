@@ -190,6 +190,32 @@
                             </tbody>
                         </v-simple-table>
                                                 </v-card>
+                <p class="mt-4">Iteração 3</p>
+                <v-card >
+
+                        <v-simple-table dense v-if="calculated">
+                            <thead>
+                                <tr>
+                                    <th>L</th>
+                                    <th>x1</th>
+                                    <th>x2</th>
+                                    <th>x3</th>
+                                    <th>x4</th>
+                                    <th>x5</th>
+                                    <th>x6</th>
+                                    <th>b</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(lines, i) in linhas4" :key="i">
+
+                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
+                                </tr>
+                            </tbody>
+                        </v-simple-table>
+                                                </v-card>
+                                <p class="mt-4">X* = {{ resultado.xOtimo }}</p>
+
                                                  </div>
             </v-container>
         </v-main>
@@ -207,6 +233,11 @@ export default {
             linhas1: [],
             linhas2: [],
             linhas3: [],
+            linhas4: [],
+            resultado: {
+                zOtimo: '',
+                xOtimo: []
+            },
 
             form: {
                 f: [0.4, 0.5],
@@ -488,6 +519,79 @@ export default {
             }
 
             console.log(this.linhas3)
+
+            // -------------
+
+            for (let index = 0; index < this.form.constrained.length; index++) {
+                if(this.form.constrained[index].excesso != 0){
+                    queEntra = 6
+                }
+            }
+
+
+
+            console.log(queEntra);
+
+            // var queSai = 0;
+
+            divisao = [];
+            for (let index = 1; index < this.linhas3.length; index++) {
+                divisao.push(parseFloat(this.linhas3[index][7]) / parseFloat(this.linhas3[0][queEntra]));
+
+                for (let index = 0; index < divisao.length; index++) {
+                    if(divisao[index] < 0){
+                        divisao[index] = divisao[index] * -1;
+
+                    }
+                }
+            }
+
+            console.log(divisao);
+
+            for (let index = 0; index <= divisao.length; index++) {
+                                if(divisao[index + 1] < divisao[index]){
+                                    queSai = index +2;
+                                }
+
+                            }
+
+            console.log(queSai);
+
+            this.linhas4 = JSON.parse(JSON.stringify(this.linhas3));
+
+            console.log(this.linhas4)
+
+            for (let index = 0; index < this.linhas4[queSai].length; index++) {
+                this.linhas4[queSai][index] = (this.linhas3[queSai][index] / this.linhas3[queSai][queEntra]);
+            }
+
+            this.linhas4[queSai][0] = 'x6'
+            console.log(this.linhas4)
+
+            for (let index = 0; index < this.linhas4.length; index++) {
+                for (let j = 1; j < this.linhas4[queSai].length; j++) {
+                    if(index != queSai) {
+                        this.linhas4[index][j] = this.linhas3[index][j] - (this.linhas3[index][queEntra] * this.linhas4[queSai][j]);
+                    }
+
+                }
+
+            }
+
+            console.log(this.linhas4)
+
+            // X otimo
+
+            for (let index = 0; index < this.linhas4.length; index++) {
+                for (let j = 1; j <= 2; j++) {
+                    if(this.linhas4[index][j] == 1){
+                        this.resultado.xOtimo.push(this.linhas4[index][7])
+                    }
+                }
+
+            }
+
+            console.log(this.resultado.xOtimo)
         },
     },
 };
