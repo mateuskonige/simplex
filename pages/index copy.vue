@@ -215,7 +215,6 @@
                         </v-simple-table>
                                                 </v-card>
                                 <p class="mt-4">X* = {{ resultado.xOtimo }}</p>
-                                <p class="mt-4">Z* = {{ resultado.zOtimo }}</p>
 
                                                  </div>
             </v-container>
@@ -250,7 +249,7 @@ export default {
                         const: 2.7,
                         folga: [],
                         artificial: [],
-                        excesso: 0,
+                        excesso: [],
                     },
                     {
                         vars: [0.5, 0.5],
@@ -258,7 +257,7 @@ export default {
                         const: 6,
                         folga: [],
                         artificial: [],
-                        excesso: 0,
+                        excesso: [],
                     },
                     {
                         vars: [0.6, 0.4],
@@ -266,7 +265,7 @@ export default {
                         const: 6,
                         folga: [],
                         artificial: [],
-                        excesso: 0,
+                        excesso: [],
                     },
                 ],
             },
@@ -297,287 +296,34 @@ export default {
 
             }
 
-
+            for (let index = 0; index < this.form.constrained.length; index++) {
+                if (this.form.constrained[index].to == "<=") {
 
                     this.linhas[0].push(1)
                     this.linhas[1].push(0)
                     this.linhas[2].push(0)
 
-
-
-                                        this.linhas[0].push(0)
-                    this.linhas[1].push(0)
-                    this.linhas[2].push(-1)
+                } else if (this.form.constrained[index].to == "=") {
 
                     this.linhas[0].push(0)
                     this.linhas[1].push(1)
                     this.linhas[2].push(0)
 
+                } else {
 
-
-
+                    this.linhas[0].push(0)
+                    this.linhas[1].push(0)
+                    this.linhas[2].push(-1)
 
                     this.linhas[0].push(0)
                     this.linhas[1].push(0)
                     this.linhas[2].push(1)
-
-
+                }
+            }
 
             for (let row = 0; row < this.form.constrained.length; row++) {
                 this.linhas[row].push(this.form.constrained[row].const)
             }
-
-            const linhaZlength = this.linhas[0].length - this.form.constrained[0].vars.length
-
-            console.log(linhaZlength)
-
-            const linhaZ = []
-
-            for (let i = 0; i < this.form.constrained[0].vars.length; i++) {
-                linhaZ.push(this.form.f[i])
-            }
-
-            for (let i = 0; i < linhaZlength; i++) {
-                if(i == (linhaZlength - 4)){
-                    linhaZ.push(1)
-                } else {
-                    linhaZ.push(0)
-                }
-            }
-
-            console.log('linha z: ' + linhaZ);
-
-            this.linhas.unshift(linhaZ);
-
-            this.linhas[0].unshift('Z')
-            this.linhas[1].unshift('x3')
-            this.linhas[2].unshift('x4')
-            this.linhas[3].unshift('x5')
-
-            this.linhas1 = JSON.parse(JSON.stringify(this.linhas));
-
-            this.linhas1[0][1] = (this.linhas1[2][1] + this.linhas1[3][1]) * -1
-            this.linhas1[0][2] = (this.linhas1[2][2] + this.linhas1[3][2]) * -1
-            this.linhas1[0][7] = (this.linhas1[2][7] + this.linhas1[3][7]) * -1
-
-            console.log(this.linhas1)
-
-            console.log(this.linhas1[0].length);
-            const linhas1linha0positiva = [];
-
-            for (let i = 0; i < this.linhas1[0].length; i++) {
-                linhas1linha0positiva.push(this.linhas1[0][i] * -1)
-            }
-
-            console.log(linhas1linha0positiva)
-
-            let queEntra = null;
-
-            for (let i = 0; i < 2; i++) {
-                console.log(linhas1linha0positiva[i+1])
-                if(linhas1linha0positiva[i+1] < linhas1linha0positiva[i]) {
-                    queEntra = i;
-                    console.log(queEntra);
-                }
-            }
-
-            console.log(queEntra);
-
-            var queSai = 0;
-
-            let divisao = [];
-            for (let index = 1; index < this.linhas1.length; index++) {
-                divisao.push(parseFloat(this.linhas1[index][7]) / parseFloat(this.linhas1[0][queEntra]));
-
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
-
-                    }
-                }
-            }
-
-            console.log(divisao);
-
-            for (let index = 0; index < divisao.length; index++) {
-                                if(divisao[index] < divisao[index+1]){
-                                    queSai = index +1;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas2 = JSON.parse(JSON.stringify(this.linhas1));
-            console.log(this.linhas2)
-
-            for (let index = 0; index < this.linhas2[queEntra].length; index++) {
-                this.linhas2[queEntra][index] = (this.linhas1[queEntra][index] / this.linhas1[queEntra][queSai]);
-            }
-
-            this.linhas2[queEntra][0] = 'x1'
-            console.log(this.linhas2)
-
-            for (let index = 0; index < this.linhas2.length; index++) {
-                for (let j = 1; j < this.linhas2[queEntra].length; j++) {
-                    if(index != queEntra) {
-                        this.linhas2[index][j] = this.linhas1[index][j] - (this.linhas1[index][queEntra] * this.linhas2[queEntra][j]);
-                    }
-
-                }
-
-            }
-
-            console.log(this.linhas2)
-
-            // -------------
-
-             const linhas2linha0positiva = [];
-
-            for (let i = 0; i <= 2; i++) {
-                if(this.linhas2[0][i] >= 0){
-
-                    linhas2linha0positiva.push(this.linhas2[0][i])
-                } else {
-
-                    linhas2linha0positiva.push(this.linhas2[0][i] * -1)
-                }
-            }
-
-            console.log('linhas2linha0positiva' + linhas2linha0positiva)
-
-            for (let i = 0; i <= 2; i++) {
-                console.log(linhas2linha0positiva[i])
-                if(linhas2linha0positiva[i+1] > linhas2linha0positiva[i]) {
-                    queEntra = i+1;
-                }
-            }
-
-            console.log(queEntra);
-
-            // var queSai = 0;
-
-            divisao = [];
-            for (let index = 1; index < this.linhas2.length; index++) {
-                divisao.push(parseFloat(this.linhas2[index][7]) / parseFloat(this.linhas2[0][queEntra]));
-
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
-
-                    }
-                }
-            }
-
-            console.log(divisao);
-
-            for (let index = 0; index <= divisao.length; index++) {
-                                if(divisao[index + 1] < divisao[index]){
-                                    queSai = index +2;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas3 = JSON.parse(JSON.stringify(this.linhas2));
-
-            console.log(this.linhas3)
-
-            for (let index = 0; index < this.linhas3[queSai].length; index++) {
-                this.linhas3[queSai][index] = (this.linhas2[queSai][index] / this.linhas2[queSai][queEntra]);
-            }
-
-            this.linhas3[queSai][0] = 'x2'
-            console.log(this.linhas3)
-
-            for (let index = 0; index < this.linhas3.length; index++) {
-                for (let j = 1; j < this.linhas3[queSai].length; j++) {
-                    if(index != queSai) {
-                        this.linhas3[index][j] = this.linhas2[index][j] - (this.linhas2[index][queEntra] * this.linhas3[queSai][j]);
-                    }
-
-                }
-
-            }
-
-            console.log(this.linhas3)
-
-            // -------------
-
-
-
-queEntra = 4
-
-            console.log(queEntra);
-
-            // var queSai = 0;
-
-            divisao = [];
-            for (let index = 1; index < this.linhas3.length; index++) {
-                divisao.push(parseFloat(this.linhas3[index][7]) / parseFloat(this.linhas3[0][queEntra]));
-
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
-
-                    }
-                }
-            }
-
-            console.log(divisao);
-
-            for (let index = 0; index <= divisao.length; index++) {
-                                if(divisao[index + 1] < divisao[index]){
-                                    queSai = index +2;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas4 = JSON.parse(JSON.stringify(this.linhas3));
-
-            console.log(this.linhas4)
-
-            for (let index = 0; index < this.linhas4[queSai].length; index++) {
-                this.linhas4[queSai][index] = (this.linhas3[queSai][index] / this.linhas3[queSai][queEntra]);
-            }
-
-            this.linhas4[queSai][0] = 'x6'
-            console.log(this.linhas4)
-
-            for (let index = 0; index < this.linhas4.length; index++) {
-                for (let j = 1; j < this.linhas4[queSai].length; j++) {
-                    if(index != queSai) {
-                        this.linhas4[index][j] = this.linhas3[index][j] - (this.linhas3[index][queEntra] * this.linhas4[queSai][j]);
-                    }
-
-                }
-
-            }
-
-            console.log(this.linhas4)
-
-            // X otimo
-
-            for (let index = 0; index < this.linhas4.length; index++) {
-                for (let j = 1; j <= 2; j++) {
-                    if(this.linhas4[index][j] == 1){
-                        this.resultado.xOtimo.push(this.linhas4[index][7])
-                    }
-                }
-
-            }
-
-            console.log(this.resultado.xOtimo)
-
-            // Z otimo
-
-            this.resultado.zOtimo = (this.form.f[0] * this.resultado.xOtimo[0] + this.form.f[1] * this.resultado.xOtimo[1]) * -1
-
-
-            console.log(this.resultado.zOtimo)
         },
     },
 };
