@@ -42,7 +42,7 @@
                             </v-row>
 
                             <v-row>
-                                <v-col> S.a. </v-col>
+                                <v-col> Sujeito a: </v-col>
                             </v-row>
 
                             <!-- RESTRICOES -->
@@ -84,36 +84,40 @@
                                 class="align-right"
                                 color="primary"
                                 depressed
-                                >Calcular</v-btn
+                                block
+                                >Calcular (tableau)</v-btn
                             >
                         </v-card-actions>
                     </form>
                 </v-card>
 
                 <div v-if="calculated">
-                    <p>Problema aumentado</p>
-                    <v-card>
-                        <v-card-text >
+
+                    <v-card class="mb-8" v-for="(x, tableau) in this.iteracoes" :key="tableau">
+                        <v-card-title>{{'Iteração ' + tableau }}</v-card-title>
+
+                        <v-card-text>
                             <v-simple-table dense>
                                 <thead>
                                     <tr>
                                         <th>Base</th>
-                                        <template v-for="(i, index) in this.linhas.length + this.form.f.length - 1 + countExcessos">
+                                        <template v-for="(i, index) in x[0].length - 2">
                                             <th :key="index">{{ 'x_' + (index + 1) }}</th>
                                         </template>
                                         <th>b</th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
-                                    <tr v-for="(lines, i) in linhas" :key="i">
+                                    <tr v-for="(lines, i) in x" :key="i">
                                         <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
                                     </tr>
                                 </tbody>
                             </v-simple-table>
                         </v-card-text>
+
                     </v-card>
                 </div>
+
             </v-container>
         </v-main>
     </v-app>
@@ -128,6 +132,7 @@ export default {
             items: ["MAX", "MIN"],
             to: ["<=", "=", ">="],
             linhas: [],
+            iteracoes: [],
             countExcessos: 0,
 
             resultado: {
@@ -177,6 +182,7 @@ export default {
                 }
             }
         },
+
         addVars() {
             if(this.form.f.length < 4){
                 this.form.f.push(0)
@@ -186,11 +192,13 @@ export default {
                 }
             }
         },
+
         subConstraineds(){
             if(this.form.constrained.length > 2){
                 this.form.constrained.pop()
             }
         },
+
         addConstraineds(){
             if(this.form.constrained.length <= 4){
                 const newConstrained = {
@@ -307,6 +315,74 @@ export default {
 
                 this.linhas[i + 1].push(this.form.constrained[i].cost);
             }
+
+            this.iteracoes.push(this.linhas)
+            this.iteracao(this.iteracoes[0])
+        },
+
+        iteracao (linhaAnterior) {
+            var linha = JSON.parse(JSON.stringify(linhaAnterior));
+
+            for (let i = 0; i < array.length; i++) {
+                const element = array[i];
+            }
+
+            console.log(linha)
+
+            linha[0][1] = (linha[2][1] + linha[3][1]) * -1
+            linha[0][2] = (linha[2][2] + linha[3][2]) * -1
+            linha[0][7] = (linha[2][7] + linha[3][7]) * -1
+
+            console.log(linha[0].length);
+            const linhas1linha0positiva = [];
+
+            for (let i = 0; i < linha[0].length; i++) {
+                linhas1linha0positiva.push(linha[0][i] * -1)
+            }
+
+            console.log(linhas1linha0positiva)
+
+            let queEntra = null;
+
+            for (let i = 0; i < 2; i++) {
+                console.log(linhas1linha0positiva[i+1])
+
+                if(linhas1linha0positiva[i+1] < linhas1linha0positiva[i]) {
+                    queEntra = i;
+                    console.log(queEntra);
+                }
+            }
+
+            console.log(queEntra);
+
+            var queSai = 0;
+
+            let divisao = [];
+            for (let index = 1; index < linha.length; index++) {
+                divisao.push(parseFloat(linha[index][7]) / parseFloat(linha[0][queEntra]));
+
+                for (let index = 0; index < divisao.length; index++) {
+                    if(divisao[index] < 0){
+                        divisao[index] = divisao[index] * -1;
+
+                    }
+                }
+            }
+
+            console.log(divisao);
+
+            for (let index = 0; index < divisao.length; index++) {
+                                if(divisao[index] < divisao[index+1]){
+                                    queSai = index +1;
+                                }
+
+                            }
+
+            console.log(queSai);
+
+            this.iteracoes.push(linha)
+
+            this.iteracao(linha)
         },
     },
 };
