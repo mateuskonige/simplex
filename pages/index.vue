@@ -2,61 +2,62 @@
     <v-app dark>
         <v-main>
             <v-container style="max-width: 768px">
+
+                <!-- BOTÕES DE CONTROLE -->
+                <v-card elevation="0">
+                    <v-card-text class="d-flex">
+                        <v-btn color="error" outlined depressed @click="subVars">- Variável</v-btn>
+                        <v-btn color="success" outlined depressed @click="addVars">+ Variável</v-btn>
+                    <v-spacer />
+                        <v-btn color="error" outlined depressed @click="subConstraineds">- Restrição</v-btn>
+                        <v-btn color="success" outlined depressed @click="addConstraineds">+ Restrição</v-btn>
+                    </v-card-text>
+                </v-card>
+
+                <!-- CARD FORM PRINCIPAL -->
                 <v-card elevation="0">
                     <form @submit.prevent="calc()">
                         <v-card-text>
+
+                            <!-- FUNCÃO Z -->
                             <v-row>
                                 <v-col>
                                     <v-select :items="items" v-model="form.to">
                                     </v-select>
                                 </v-col>
+
                                 <v-col>
                                     <v-text-field
                                         disabled
                                         value="Z ="
                                     ></v-text-field>
                                 </v-col>
-                                <v-col>
+
+                                <v-col v-for="(i, index) in form.f" :key="index">
                                     <v-text-field
-                                        label="X1"
-                                        v-model.number="form.f[0]"
-                                    ></v-text-field>
-                                </v-col>
-                                <v-col>
-                                    <v-text-field
-                                        label="X2"
-                                        v-model.number="form.f[1]"
+                                        :label="'x_' + (index + 1)"
+                                        v-model.number="form.f[index]"
                                     ></v-text-field>
                                 </v-col>
                             </v-row>
+
                             <v-row>
                                 <v-col> S.a. </v-col>
                             </v-row>
-                            <div
-                                v-for="(i, index) in form.constrained.length"
-                                :key="index"
-                            >
-                                <v-row>
-                                    <v-col>
+
+                            <!-- RESTRICOES -->
+                                <v-row v-for="(i, index) in form.constrained.length" :key="index">
+                                    <!-- RESTRICOES: X -->
+                                    <v-col v-for="(j, jndex) in form.constrained[index].vars" :key="jndex">
                                         <v-text-field
                                             type="number"
                                             step="0.1"
-                                            label="X1"
-                                            v-model.number="
-                                                form.constrained[index].vars[0]
-                                            "
+                                            :label="'x_' + (jndex + 1)"
+                                            v-model.number="form.constrained[index].vars[jndex]"
                                         ></v-text-field>
                                     </v-col>
-                                    <v-col>
-                                        <v-text-field
-                                            type="number"
-                                            step="0.1"
-                                            label="X2"
-                                            v-model.number="
-                                                form.constrained[index].vars[1]
-                                            "
-                                        ></v-text-field>
-                                    </v-col>
+
+                                    <!-- RESTRICOES: <=,>= OU == -->
                                     <v-col>
                                         <v-select
                                             :items="to"
@@ -64,18 +65,18 @@
                                         >
                                         </v-select>
                                     </v-col>
+
+                                    <!-- RESTRICOES: CUSTO -->
                                     <v-col>
                                         <v-text-field
                                             type="number"
                                             step="0.1"
-                                            v-model.number="
-                                                form.constrained[index].const
-                                            "
+                                            v-model.number="form.constrained[index].cost"
                                         ></v-text-field>
                                     </v-col>
                                 </v-row>
-                            </div>
                         </v-card-text>
+
                         <v-card-actions>
                             <v-spacer />
                             <v-btn v-if="!calculated"
@@ -88,136 +89,31 @@
                         </v-card-actions>
                     </form>
                 </v-card>
+
                 <div v-if="calculated">
+                    <p>Problema aumentado</p>
+                    <v-card>
+                        <v-card-text >
+                            <v-simple-table dense>
+                                <thead>
+                                    <tr>
+                                        <th>Base</th>
+                                        <template v-for="(i, index) in this.linhas.length + this.form.f.length - 1 + countExcessos">
+                                            <th :key="index">{{ 'x_' + (index + 1) }}</th>
+                                        </template>
+                                        <th>b</th>
+                                    </tr>
+                                </thead>
 
-
-                <p>Problema aumentado</p>
-                <v-card>
-                    <v-card-text >
-                        <v-simple-table dense >
-                            <thead>
-                                <tr>
-                                    <th>L</th>
-                                    <th>x1</th>
-                                    <th>x2</th>
-                                    <th>x3</th>
-                                    <th>x4</th>
-                                    <th>x5</th>
-                                    <th>x6</th>
-                                    <th>b</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(lines, i) in linhas" :key="i">
-                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
-                                </tr>
-                            </tbody>
-                        </v-simple-table>
-
-
-                    </v-card-text>
-                </v-card>
-
-                <p class="mt-4">Iteração 0</p>
-                <v-card >
-
-                        <v-simple-table dense v-if="calculated">
-                            <thead>
-                                <tr>
-                                    <th>L</th>
-                                    <th>x1</th>
-                                    <th>x2</th>
-                                    <th>x3</th>
-                                    <th>x4</th>
-                                    <th>x5</th>
-                                    <th>x6</th>
-                                    <th>b</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(lines, i) in linhas1" :key="i">
-
-                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
-                                </tr>
-                            </tbody>
-                        </v-simple-table>
-                                                </v-card>
-                <p class="mt-4">Iteração 1</p>
-                <v-card >
-
-                        <v-simple-table dense v-if="calculated">
-                            <thead>
-                                <tr>
-                                    <th>L</th>
-                                    <th>x1</th>
-                                    <th>x2</th>
-                                    <th>x3</th>
-                                    <th>x4</th>
-                                    <th>x5</th>
-                                    <th>x6</th>
-                                    <th>b</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(lines, i) in linhas2" :key="i">
-
-                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
-                                </tr>
-                            </tbody>
-                        </v-simple-table>
-                                                </v-card>
-                <p class="mt-4">Iteração 2</p>
-                <v-card >
-
-                        <v-simple-table dense v-if="calculated">
-                            <thead>
-                                <tr>
-                                    <th>L</th>
-                                    <th>x1</th>
-                                    <th>x2</th>
-                                    <th>x3</th>
-                                    <th>x4</th>
-                                    <th>x5</th>
-                                    <th>x6</th>
-                                    <th>b</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(lines, i) in linhas3" :key="i">
-
-                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
-                                </tr>
-                            </tbody>
-                        </v-simple-table>
-                                                </v-card>
-                <p class="mt-4">Iteração 3</p>
-                <v-card >
-
-                        <v-simple-table dense v-if="calculated">
-                            <thead>
-                                <tr>
-                                    <th>L</th>
-                                    <th>x1</th>
-                                    <th>x2</th>
-                                    <th>x3</th>
-                                    <th>x4</th>
-                                    <th>x5</th>
-                                    <th>x6</th>
-                                    <th>b</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(lines, i) in linhas4" :key="i">
-
-                                    <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
-                                </tr>
-                            </tbody>
-                        </v-simple-table>
-                                                </v-card>
-                                <p class="mt-4">X* = {{ resultado.xOtimo }}</p>
-                                <p class="mt-4">Z* = {{ resultado.zOtimo }}</p>
-
-                                                 </div>
+                                <tbody>
+                                    <tr v-for="(lines, i) in linhas" :key="i">
+                                        <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
+                                    </tr>
+                                </tbody>
+                            </v-simple-table>
+                        </v-card-text>
+                    </v-card>
+                </div>
             </v-container>
         </v-main>
     </v-app>
@@ -227,14 +123,13 @@
 export default {
     data() {
         return {
+            calculated: false,
+
             items: ["MAX", "MIN"],
             to: ["<=", "=", ">="],
-            calculated: false,
             linhas: [],
-            linhas1: [],
-            linhas2: [],
-            linhas3: [],
-            linhas4: [],
+            countExcessos: 0,
+
             resultado: {
                 zOtimo: '',
                 xOtimo: []
@@ -247,7 +142,7 @@ export default {
                     {
                         vars: [0.3, 0.1],
                         to: "",
-                        const: 2.7,
+                        cost: 2.7,
                         folga: [],
                         artificial: [],
                         excesso: 0,
@@ -255,7 +150,7 @@ export default {
                     {
                         vars: [0.5, 0.5],
                         to: "",
-                        const: 6,
+                        cost: 6,
                         folga: [],
                         artificial: [],
                         excesso: 0,
@@ -263,7 +158,7 @@ export default {
                     {
                         vars: [0.6, 0.4],
                         to: "",
-                        const: 6,
+                        cost: 6,
                         folga: [],
                         artificial: [],
                         excesso: 0,
@@ -273,311 +168,145 @@ export default {
         };
     },
     methods: {
+        subVars() {
+            if(this.form.f.length > 2){
+                this.form.f.pop()
+
+                for (let i = 0; i < this.form.constrained.length; i++) {
+                    this.form.constrained[i].vars.pop()
+                }
+            }
+        },
+        addVars() {
+            if(this.form.f.length < 4){
+                this.form.f.push(0)
+
+                for (let i = 0; i < this.form.constrained.length; i++) {
+                    this.form.constrained[i].vars.push(0)
+                }
+            }
+        },
+        subConstraineds(){
+            if(this.form.constrained.length > 2){
+                this.form.constrained.pop()
+            }
+        },
+        addConstraineds(){
+            if(this.form.constrained.length <= 4){
+                const newConstrained = {
+                    vars: [0, 0],
+                    to: "",
+                    cost: 0,
+                    folga: [],
+                    artificial: [],
+                    excesso: 0,
+                }
+
+                if (this.form.constrained[0].vars.length != 2) {
+                    for (let i = 0; i < this.form.constrained[0].vars.length - 2; i++) {
+                        newConstrained.vars.push(0)
+                    }
+                }
+
+                this.form.constrained.push(newConstrained)
+            }
+        },
+
         calc() {
             this.calculated = true;
 
+            //TRATANDO MINIMIZACAO
             if (this.form.to == "MIN") {
-                this.form.f[0] = this.form.f[0] * -1;
-                this.form.f[1] = this.form.f[1] * -1;
+                for (let i = 0; i < this.form.f.length; i++) {
+                    this.form.f[i] *= -1;
+                }
                 this.form.to = "MAX";
             }
 
+            //linha Z
+            let linhaZ = []
+
+            linhaZ.push('Z')
+
+            for (let i = 0; i < this.form.f.length; i++) {
+                linhaZ.push(this.form.f[i]);
+            }
+
+            this.linhas.push(linhaZ);
+
+            //CRIANDO LINHAS
             for (let row = 0; row < this.form.constrained.length; row++) {
+                // Criando as linhas
                 let linha = [];
 
-                for (
-                    let i = 0;
-                    i < this.form.constrained[row].vars.length;
-                    i++
-                ) {
+                // Base
+                linha.push('x_' + (this.form.f.length + 1 + row ))
+
+                // Variáveis
+                for (let i = 0; i < this.form.constrained[row].vars.length; i++) {
                     linha.push(this.form.constrained[row].vars[i]);
                 }
 
                 this.linhas.push(linha);
-
             }
 
+            // ------------------------
 
+            // ADICIONANDO FOLGA, ARTIFICIAL E EXCESSO
+            for (let i = 0; i < this.form.constrained.length; i++) {
 
-                    this.linhas[0].push(1)
-                    this.linhas[1].push(0)
-                    this.linhas[2].push(0)
+                // ADICIONANDO FOLGA
+                if (this.form.constrained[i].to == "<=") {
+                    for (let j = 0; j < this.linhas.length; j++) {
+                        this.linhas[j].push(0)
 
-
-
-                                        this.linhas[0].push(0)
-                    this.linhas[1].push(0)
-                    this.linhas[2].push(-1)
-
-                    this.linhas[0].push(0)
-                    this.linhas[1].push(1)
-                    this.linhas[2].push(0)
-
-
-
-
-
-                    this.linhas[0].push(0)
-                    this.linhas[1].push(0)
-                    this.linhas[2].push(1)
-
-
-
-            for (let row = 0; row < this.form.constrained.length; row++) {
-                this.linhas[row].push(this.form.constrained[row].const)
-            }
-
-            const linhaZlength = this.linhas[0].length - this.form.constrained[0].vars.length
-
-            console.log(linhaZlength)
-
-            const linhaZ = []
-
-            for (let i = 0; i < this.form.constrained[0].vars.length; i++) {
-                linhaZ.push(this.form.f[i])
-            }
-
-            for (let i = 0; i < linhaZlength; i++) {
-                if(i == (linhaZlength - 4)){
-                    linhaZ.push(1)
-                } else {
-                    linhaZ.push(0)
+                        if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
+                            this.linhas[j][this.linhas[j].length - 1] = 1
+                        }
+                    }
                 }
-            }
 
-            console.log('linha z: ' + linhaZ);
+                // ADICIONANDO ARTIFICIAL
+                if (this.form.constrained[i].to == "=") {
+                    for (let j = 0; j < this.linhas.length; j++) {
+                        this.linhas[j].push(0)
 
-            this.linhas.unshift(linhaZ);
-
-            this.linhas[0].unshift('Z')
-            this.linhas[1].unshift('x3')
-            this.linhas[2].unshift('x4')
-            this.linhas[3].unshift('x5')
-
-            this.linhas1 = JSON.parse(JSON.stringify(this.linhas));
-
-            this.linhas1[0][1] = (this.linhas1[2][1] + this.linhas1[3][1]) * -1
-            this.linhas1[0][2] = (this.linhas1[2][2] + this.linhas1[3][2]) * -1
-            this.linhas1[0][7] = (this.linhas1[2][7] + this.linhas1[3][7]) * -1
-
-            console.log(this.linhas1)
-
-            console.log(this.linhas1[0].length);
-            const linhas1linha0positiva = [];
-
-            for (let i = 0; i < this.linhas1[0].length; i++) {
-                linhas1linha0positiva.push(this.linhas1[0][i] * -1)
-            }
-
-            console.log(linhas1linha0positiva)
-
-            let queEntra = null;
-
-            for (let i = 0; i < 2; i++) {
-                console.log(linhas1linha0positiva[i+1])
-                if(linhas1linha0positiva[i+1] < linhas1linha0positiva[i]) {
-                    queEntra = i;
-                    console.log(queEntra);
+                        if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
+                            this.linhas[j][this.linhas[j].length - 1] = 1
+                            this.linhas[j][0] = this.linhas[j][0] + '*'
+                        }
+                    }
                 }
-            }
 
-            console.log(queEntra);
+                // ADICIONANDO EXCESSO
+                if (this.form.constrained[i].to == ">=") {
+                    this.countExcessos++
 
-            var queSai = 0;
+                    for (let j = 0; j < this.linhas.length; j++) {
+                        this.linhas[j].push(0)
 
-            let divisao = [];
-            for (let index = 1; index < this.linhas1.length; index++) {
-                divisao.push(parseFloat(this.linhas1[index][7]) / parseFloat(this.linhas1[0][queEntra]));
+                        if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
+                            this.linhas[j][this.linhas[j].length - 1] = 1
+                        }
 
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
+                        this.linhas[j].push(0)
 
+                        if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
+                            this.linhas[j][this.linhas[j].length - 1] = -1
+                            this.linhas[0][this.linhas[j].length - 1] = 1
+                        }
                     }
                 }
             }
 
-            console.log(divisao);
-
-            for (let index = 0; index < divisao.length; index++) {
-                                if(divisao[index] < divisao[index+1]){
-                                    queSai = index +1;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas2 = JSON.parse(JSON.stringify(this.linhas1));
-            console.log(this.linhas2)
-
-            for (let index = 0; index < this.linhas2[queEntra].length; index++) {
-                this.linhas2[queEntra][index] = (this.linhas1[queEntra][index] / this.linhas1[queEntra][queSai]);
-            }
-
-            this.linhas2[queEntra][0] = 'x1'
-            console.log(this.linhas2)
-
-            for (let index = 0; index < this.linhas2.length; index++) {
-                for (let j = 1; j < this.linhas2[queEntra].length; j++) {
-                    if(index != queEntra) {
-                        this.linhas2[index][j] = this.linhas1[index][j] - (this.linhas1[index][queEntra] * this.linhas2[queEntra][j]);
-                    }
-
+            // COST
+            for (let i = 0; i < this.form.constrained.length; i++) {
+                if(i == 0){
+                    this.linhas[i].push(0);
                 }
 
+                this.linhas[i + 1].push(this.form.constrained[i].cost);
             }
-
-            console.log(this.linhas2)
-
-            // -------------
-
-             const linhas2linha0positiva = [];
-
-            for (let i = 0; i <= 2; i++) {
-                if(this.linhas2[0][i] >= 0){
-
-                    linhas2linha0positiva.push(this.linhas2[0][i])
-                } else {
-
-                    linhas2linha0positiva.push(this.linhas2[0][i] * -1)
-                }
-            }
-
-            console.log('linhas2linha0positiva' + linhas2linha0positiva)
-
-            for (let i = 0; i <= 2; i++) {
-                console.log(linhas2linha0positiva[i])
-                if(linhas2linha0positiva[i+1] > linhas2linha0positiva[i]) {
-                    queEntra = i+1;
-                }
-            }
-
-            console.log(queEntra);
-
-            // var queSai = 0;
-
-            divisao = [];
-            for (let index = 1; index < this.linhas2.length; index++) {
-                divisao.push(parseFloat(this.linhas2[index][7]) / parseFloat(this.linhas2[0][queEntra]));
-
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
-
-                    }
-                }
-            }
-
-            console.log(divisao);
-
-            for (let index = 0; index <= divisao.length; index++) {
-                                if(divisao[index + 1] < divisao[index]){
-                                    queSai = index +2;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas3 = JSON.parse(JSON.stringify(this.linhas2));
-
-            console.log(this.linhas3)
-
-            for (let index = 0; index < this.linhas3[queSai].length; index++) {
-                this.linhas3[queSai][index] = (this.linhas2[queSai][index] / this.linhas2[queSai][queEntra]);
-            }
-
-            this.linhas3[queSai][0] = 'x2'
-            console.log(this.linhas3)
-
-            for (let index = 0; index < this.linhas3.length; index++) {
-                for (let j = 1; j < this.linhas3[queSai].length; j++) {
-                    if(index != queSai) {
-                        this.linhas3[index][j] = this.linhas2[index][j] - (this.linhas2[index][queEntra] * this.linhas3[queSai][j]);
-                    }
-
-                }
-
-            }
-
-            console.log(this.linhas3)
-
-            // -------------
-
-
-
-queEntra = 4
-
-            console.log(queEntra);
-
-            // var queSai = 0;
-
-            divisao = [];
-            for (let index = 1; index < this.linhas3.length; index++) {
-                divisao.push(parseFloat(this.linhas3[index][7]) / parseFloat(this.linhas3[0][queEntra]));
-
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
-
-                    }
-                }
-            }
-
-            console.log(divisao);
-
-            for (let index = 0; index <= divisao.length; index++) {
-                                if(divisao[index + 1] < divisao[index]){
-                                    queSai = index +2;
-                                }
-
-                            }
-
-            console.log(queSai);
-
-            this.linhas4 = JSON.parse(JSON.stringify(this.linhas3));
-
-            console.log(this.linhas4)
-
-            for (let index = 0; index < this.linhas4[queSai].length; index++) {
-                this.linhas4[queSai][index] = (this.linhas3[queSai][index] / this.linhas3[queSai][queEntra]);
-            }
-
-            this.linhas4[queSai][0] = 'x6'
-            console.log(this.linhas4)
-
-            for (let index = 0; index < this.linhas4.length; index++) {
-                for (let j = 1; j < this.linhas4[queSai].length; j++) {
-                    if(index != queSai) {
-                        this.linhas4[index][j] = this.linhas3[index][j] - (this.linhas3[index][queEntra] * this.linhas4[queSai][j]);
-                    }
-
-                }
-
-            }
-
-            console.log(this.linhas4)
-
-            // X otimo
-
-            for (let index = 0; index < this.linhas4.length; index++) {
-                for (let j = 1; j <= 2; j++) {
-                    if(this.linhas4[index][j] == 1){
-                        this.resultado.xOtimo.push(this.linhas4[index][7])
-                    }
-                }
-
-            }
-
-            console.log(this.resultado.xOtimo)
-
-            // Z otimo
-
-            this.resultado.zOtimo = (this.form.f[0] * this.resultado.xOtimo[0] + this.form.f[1] * this.resultado.xOtimo[1]) * -1
-
-
-            console.log(this.resultado.zOtimo)
         },
     },
 };
