@@ -352,11 +352,17 @@ export default {
             for (let i = 0; i < this.linhas.length; i++) {
                 if(this.linhas[i][1] == 1){
                     for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
-                        this.linhas[0][j + 2] += (this.linhas[i][j + 2] * -1)
+                        this.linhas[0][j + 2] += this.linhas[i][j + 2]
                     }
 
-                    this.linhas[0][this.linhas[0].length - 1] += (this.linhas[i][this.linhas[0].length - 1] * -1)
+                    this.linhas[0][this.linhas[0].length - 1] += this.linhas[i][this.linhas[0].length - 1]
                 }
+            }
+
+            // invertendo linha z
+
+            for (let i = 2; i < this.linhas[0].length; i++) {
+                this.linhas[0][i] *= -1
             }
 
             this.iteracoes.push(this.linhas);
@@ -376,9 +382,14 @@ export default {
                 countNovaLinha0 += novaLinha[0][i]
             }
 
-            if(countNovaLinha0 == 0){
+
+            if(countNovaLinha0 == 0 && this.countExcessos > 0){
                 iteracaoExcesso = true
             }
+
+            console.log('iteracaoExcesso' + iteracaoExcesso)
+            console.log('countNovaLinha0' + countNovaLinha0)
+
 
             let maior = -1
             let queEntra = 0;
@@ -389,6 +400,9 @@ export default {
                 maior = novaLinha[0][this.indexOfExcessos[0]];
                 queEntra = this.indexOfExcessos[0];
 
+                this.indexOfExcessos.shift();
+                console.log(maior)
+                console.log(queEntra)
             } else {
 
 
@@ -411,6 +425,8 @@ export default {
                         queEntra = linhaZpositivada.indexOf(linhaZpositivada[i])
                     }
                 }
+
+                // queEntra += 2
             }
 
             console.log(maior)
@@ -421,9 +437,14 @@ export default {
 
             for (let i = 1; i < novaLinha.length; i++) {
                 if(novaLinha[i][novaLinha[i].length - 1] == 0) {
-                        divisao.push(Infinity)
+                        divisao.push(0)
                     } else {
-                        divisao.push(parseFloat(novaLinha[i][novaLinha[i].length - 1]) / maior);
+                        if(iteracaoExcesso == false){
+                            divisao.push(parseFloat(novaLinha[i][novaLinha[i].length - 1]) / linhaAnterior[i][queEntra + 2]);
+                        } else {
+                            divisao.push(parseFloat(novaLinha[i][novaLinha[i].length - 1]) / linhaAnterior[i][queEntra]);
+                        }
+
                     }
 
                 for (let i = 0; i < divisao.length; i++) {
@@ -491,8 +512,8 @@ export default {
 
                 // X otimo
 
-                for (let i = 1; i < novaLinha.length; i++) {
-                    for (let j = 2; j <= this.form.constrained[0].vars.length + 2; j++) {
+                for (let j = 2; j < this.form.f.length + 2; j++) {
+                    for (let i = 1; i < novaLinha.length; i++) {
                         if(novaLinha[i][j] == 1){
                             this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
                         }
