@@ -119,8 +119,9 @@
                         </v-card-text>
 
                     </v-card>
+                                <p class="mt-4">X* = {{ resultado.xOtimo }}</p>
+                                <p class="mt-4">Z* = {{ resultado.zOtimo }}</p>
                 </div>
-
             </v-container>
         </v-main>
     </v-app>
@@ -139,11 +140,14 @@ export default {
 
             wasMIN: 0,
             countExcessos: 0,
+            indexOfExcessos: [],
+
+            teste: 0,
 
             pivos: [],
 
             resultado: {
-                zOtimo: '',
+                zOtimo: 0,
                 xOtimo: []
             },
 
@@ -316,6 +320,8 @@ export default {
                         if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
                             this.linhas[j][this.linhas[j].length - 1] = -1
                             this.linhas[0][this.linhas[j].length - 1] = 1
+                            this.indexOfExcessos.push(this.linhas[0].indexOf(this.linhas[0][this.linhas[j].length - 1]))
+                            console.log('indexOfExcessos: ' + this.indexOfExcessos)
                         }
                     }
                 }
@@ -333,78 +339,182 @@ export default {
             //PIVO
             this.pivos.push(0)
 
-            this.iteracoes.push(this.linhas)
+            for (let i = 0; i < this.linhas.length; i++) {
+                if(this.linhas[i][1] == 1){
+                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                        this.linhas[0][j + 2] = 0
+                    }
+
+                    this.linhas[0][this.linhas[0].length - 1] = 0
+                }
+            }
+
+            for (let i = 0; i < this.linhas.length; i++) {
+                if(this.linhas[i][1] == 1){
+                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                        this.linhas[0][j + 2] += (this.linhas[i][j + 2] * -1)
+                    }
+
+                    this.linhas[0][this.linhas[0].length - 1] += (this.linhas[i][this.linhas[0].length - 1] * -1)
+                }
+            }
+
+            this.iteracoes.push(this.linhas);
+
             this.iteracao(this.iteracoes[0])
         },
 
         iteracao(linhaAnterior) {
-            let novaLinha = JSON.parse(JSON.stringify(linhaAnterior));
+            let novaLinha = [];
+            novaLinha = JSON.parse(JSON.stringify(linhaAnterior));
 
-            console.log(novaLinha)
-
-            for (let i = 0; i < novaLinha.length; i++) {
-                if(novaLinha[i][1] == 1){
-                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
-                        novaLinha[0][j + 2] = 0
-                    }
-
-                    novaLinha[0][novaLinha[0].length - 1] = 0
-                }
-            }
-
-            for (let i = 0; i < novaLinha.length; i++) {
-                if(novaLinha[i][1] == 1){
-                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
-                        novaLinha[0][j + 2] += (novaLinha[i][j + 2] * -1)
-                    }
-
-                    novaLinha[0][novaLinha[0].length - 1] += (novaLinha[i][novaLinha[0].length - 1] * -1)
-                }
-            }
-
-            //DEFININDO PESOS
-            let linhaZpositivada = [];
+            let iteracaoExcesso = false
+            let countNovaLinha0 = 0
 
             for (let i = 2; i < this.form.constrained[0].vars.length + 2; i++) {
-                if(novaLinha[0][i] < 0){
-                    linhaZpositivada.push(novaLinha[0][i] * -1)
-                } else {
-                    linhaZpositivada.push(novaLinha[0][i])
-                }
+                console.log(novaLinha[0][i])
+                countNovaLinha0 += novaLinha[0][i]
             }
 
-            console.log(linhaZpositivada);
+            if(countNovaLinha0 == 0){
+                iteracaoExcesso = true
+            }
 
-            //QUE ENTRA
-            let maior = -1;
+            let maior = -1
             let queEntra = 0;
 
-            for (var i = 0; i < linhaZpositivada.length; i++) {
-                if (maior < linhaZpositivada[i] ) {
-                    maior = linhaZpositivada[i];
-                    queEntra = linhaZpositivada.indexOf(linhaZpositivada[i])
+            if (iteracaoExcesso == true) {
+                this.countExcessos --
+
+                maior = novaLinha[0][this.indexOfExcessos[0]];
+                queEntra = this.indexOfExcessos[0];
+
+            } else {
+
+
+                //DEFININDO PESOS
+                let linhaZpositivada = [];
+
+                for (let i = 2; i < this.form.constrained[0].vars.length + 2; i++) {
+                    if(novaLinha[0][i] < 0){
+                        linhaZpositivada.push(novaLinha[0][i] * -1)
+                    } else {
+                        linhaZpositivada.push(novaLinha[0][i])
+                    }
+                }
+
+                console.log(linhaZpositivada);
+
+                for (var i = 0; i < linhaZpositivada.length; i++) {
+                    if (maior < linhaZpositivada[i] ) {
+                        maior = linhaZpositivada[i];
+                        queEntra = linhaZpositivada.indexOf(linhaZpositivada[i])
+                    }
                 }
             }
 
+            console.log(maior)
             console.log(queEntra)
 
-            var queSai = 0;
+            //DIVISAO DOS CUSTOS PELA VARIAVEL PIVO
             let divisao = [];
 
             for (let i = 1; i < novaLinha.length; i++) {
-                divisao.push(parseFloat(novaLinha[i][7]) / parseFloat(novaLinha[0][queEntra]));
+                if(novaLinha[i][novaLinha[i].length - 1] == 0) {
+                        divisao.push(Infinity)
+                    } else {
+                        divisao.push(parseFloat(novaLinha[i][novaLinha[i].length - 1]) / maior);
+                    }
 
                 for (let i = 0; i < divisao.length; i++) {
                     if(divisao[i] < 0){
                         divisao[i] = divisao[i] * -1;
-
                     }
                 }
             }
 
+            console.log(divisao)
 
+            //QUE SAI
+            var menor = 999999999;
+            var queSai = 0;
+
+            for (var i = 0; i < divisao.length; i++) {
+                if (menor > divisao[i] ) {
+                    menor = divisao[i];
+                    queSai = divisao.indexOf(divisao[i])
+                }
+            }
+
+            console.log(menor)
+            console.log(queSai)
+
+            //AJUSTANDO AS POSIÇÕES DE ACORDO COM O TABLEAU
+            if(iteracaoExcesso == false) {
+                queEntra += 2
+            }
+            queSai += 1
+
+            console.log('queEntraPosicionada: ' + queEntra) //2
+            console.log('queSaiPosicionada' + queSai) //1
+
+            //ITERANDO
+            for (let i = 2; i < novaLinha[queSai].length; i++) {
+                novaLinha[queSai][i] = (linhaAnterior[queSai][i] / linhaAnterior[queSai][queEntra]);
+            }
+
+            novaLinha[queSai][0] = 'x_' + (queEntra - 1)
+            console.log(novaLinha)
+
+            for (let i = 0; i < novaLinha.length; i++) {
+                for (let j = 2; j < novaLinha[queSai].length; j++) {
+                    if(i != queSai) {
+                        novaLinha[i][j] = linhaAnterior[i][j] - (linhaAnterior[i][queEntra] * novaLinha[queSai][j]);
+                    }
+                }
+            }
 
             this.iteracoes.push(novaLinha)
+
+            //mais iterações?
+            let maisiteracoes = false;
+
+            if(countNovaLinha0 == 0 && this.countExcessos == 0) {
+                maisiteracoes = false;
+            } else {
+                maisiteracoes = true;
+            }
+
+            if(maisiteracoes) {
+                this.iteracao(this.iteracoes[this.iteracoes.length - 1])
+            } else {
+
+                // X otimo
+
+                for (let i = 1; i < novaLinha.length; i++) {
+                    for (let j = 2; j <= this.form.constrained[0].vars.length + 2; j++) {
+                        if(novaLinha[i][j] == 1){
+                            this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
+                        }
+                    }
+                }
+
+                console.log(this.resultado.xOtimo)
+
+                // Z otimo
+                for (let i = 0; i < this.form.f.length; i++) {
+                    this.resultado.zOtimo += this.form.f[i] * this.resultado.xOtimo[i]
+                }
+
+                if(this.resultado.zOtimo < 0) {
+                    this.resultado.zOtimo *= -1
+                }
+
+                console.log(this.resultado.zOtimo)
+
+                console.log('nao precisa de mais iteracoes')
+                console.log(this.teste)
+            }
         }
     },
 };
