@@ -101,7 +101,8 @@
                                 <thead>
                                     <tr>
                                         <th>Base</th>
-                                        <template v-for="(i, index) in x[0].length - 2">
+                                        <th>Cb</th>
+                                        <template v-for="(i, index) in x[0].length - 3">
                                             <th :key="index">{{ 'x_' + (index + 1) }}</th>
                                         </template>
                                         <th>b</th>
@@ -109,7 +110,9 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="(lines, i) in x" :key="i">
-                                        <td v-for="(li, j) in lines" :key="j">{{ li }}</td>
+                                        <td v-for="(li, j) in lines" :key="j">
+                                            {{ li }}
+                                        </td>
                                     </tr>
                                 </tbody>
                             </v-simple-table>
@@ -133,7 +136,11 @@ export default {
             to: ["<=", "=", ">="],
             linhas: [],
             iteracoes: [],
+
+            wasMIN: 0,
             countExcessos: 0,
+
+            pivos: [],
 
             resultado: {
                 zOtimo: '',
@@ -229,12 +236,14 @@ export default {
                     this.form.f[i] *= -1;
                 }
                 this.form.to = "MAX";
+                this.wasMIN = 1
             }
 
             //linha Z
             let linhaZ = []
 
             linhaZ.push('Z')
+            linhaZ.push(0)
 
             for (let i = 0; i < this.form.f.length; i++) {
                 linhaZ.push(this.form.f[i]);
@@ -249,6 +258,10 @@ export default {
 
                 // Base
                 linha.push('x_' + (this.form.f.length + 1 + row ))
+
+                // Cb
+                linha.push(0)
+
 
                 // Variáveis
                 for (let i = 0; i < this.form.constrained[row].vars.length; i++) {
@@ -281,7 +294,7 @@ export default {
 
                         if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
                             this.linhas[j][this.linhas[j].length - 1] = 1
-                            this.linhas[j][0] = this.linhas[j][0] + '*'
+                            this.linhas[j][1] = 1
                         }
                     }
                 }
@@ -295,6 +308,7 @@ export default {
 
                         if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
                             this.linhas[j][this.linhas[j].length - 1] = 1
+                            this.linhas[j][1] = 1
                         }
 
                         this.linhas[j].push(0)
@@ -316,74 +330,82 @@ export default {
                 this.linhas[i + 1].push(this.form.constrained[i].cost);
             }
 
+            //PIVO
+            this.pivos.push(0)
+
             this.iteracoes.push(this.linhas)
             this.iteracao(this.iteracoes[0])
         },
 
-        iteracao (linhaAnterior) {
-            var linha = JSON.parse(JSON.stringify(linhaAnterior));
+        iteracao(linhaAnterior) {
+            let novaLinha = JSON.parse(JSON.stringify(linhaAnterior));
 
-            for (let i = 0; i < array.length; i++) {
-                const element = array[i];
-            }
+            console.log(novaLinha)
 
-            console.log(linha)
+            for (let i = 0; i < novaLinha.length; i++) {
+                if(novaLinha[i][1] == 1){
+                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                        novaLinha[0][j + 2] = 0
+                    }
 
-            linha[0][1] = (linha[2][1] + linha[3][1]) * -1
-            linha[0][2] = (linha[2][2] + linha[3][2]) * -1
-            linha[0][7] = (linha[2][7] + linha[3][7]) * -1
-
-            console.log(linha[0].length);
-            const linhas1linha0positiva = [];
-
-            for (let i = 0; i < linha[0].length; i++) {
-                linhas1linha0positiva.push(linha[0][i] * -1)
-            }
-
-            console.log(linhas1linha0positiva)
-
-            let queEntra = null;
-
-            for (let i = 0; i < 2; i++) {
-                console.log(linhas1linha0positiva[i+1])
-
-                if(linhas1linha0positiva[i+1] < linhas1linha0positiva[i]) {
-                    queEntra = i;
-                    console.log(queEntra);
+                    novaLinha[0][novaLinha[0].length - 1] = 0
                 }
             }
 
-            console.log(queEntra);
+            for (let i = 0; i < novaLinha.length; i++) {
+                if(novaLinha[i][1] == 1){
+                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                        novaLinha[0][j + 2] += (novaLinha[i][j + 2] * -1)
+                    }
+
+                    novaLinha[0][novaLinha[0].length - 1] += (novaLinha[i][novaLinha[0].length - 1] * -1)
+                }
+            }
+
+            //DEFININDO PESOS
+            let linhaZpositivada = [];
+
+            for (let i = 2; i < this.form.constrained[0].vars.length + 2; i++) {
+                if(novaLinha[0][i] < 0){
+                    linhaZpositivada.push(novaLinha[0][i] * -1)
+                } else {
+                    linhaZpositivada.push(novaLinha[0][i])
+                }
+            }
+
+            console.log(linhaZpositivada);
+
+            //QUE ENTRA
+            let maior = -1;
+            let queEntra = 0;
+
+            for (var i = 0; i < linhaZpositivada.length; i++) {
+                if (maior < linhaZpositivada[i] ) {
+                    maior = linhaZpositivada[i];
+                    queEntra = linhaZpositivada.indexOf(linhaZpositivada[i])
+                }
+            }
+
+            console.log(queEntra)
 
             var queSai = 0;
-
             let divisao = [];
-            for (let index = 1; index < linha.length; index++) {
-                divisao.push(parseFloat(linha[index][7]) / parseFloat(linha[0][queEntra]));
 
-                for (let index = 0; index < divisao.length; index++) {
-                    if(divisao[index] < 0){
-                        divisao[index] = divisao[index] * -1;
+            for (let i = 1; i < novaLinha.length; i++) {
+                divisao.push(parseFloat(novaLinha[i][7]) / parseFloat(novaLinha[0][queEntra]));
+
+                for (let i = 0; i < divisao.length; i++) {
+                    if(divisao[i] < 0){
+                        divisao[i] = divisao[i] * -1;
 
                     }
                 }
             }
 
-            console.log(divisao);
 
-            for (let index = 0; index < divisao.length; index++) {
-                                if(divisao[index] < divisao[index+1]){
-                                    queSai = index +1;
-                                }
 
-                            }
-
-            console.log(queSai);
-
-            this.iteracoes.push(linha)
-
-            this.iteracao(linha)
-        },
+            this.iteracoes.push(novaLinha)
+        }
     },
 };
 </script>
