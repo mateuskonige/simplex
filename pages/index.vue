@@ -6,11 +6,11 @@
                 <!-- BOTÕES DE CONTROLE -->
                 <v-card elevation="0">
                     <v-card-text class="d-flex">
-                        <v-btn color="error" outlined depressed @click="subVars">- Variável</v-btn>
-                        <v-btn color="success" outlined depressed @click="addVars">+ Variável</v-btn>
+                        <v-btn color="error" outlined depressed @click="subVars">- Var.</v-btn>
+                        <v-btn color="success" outlined depressed @click="addVars">+ Var.</v-btn>
                     <v-spacer />
-                        <v-btn color="error" outlined depressed @click="subConstraineds">- Restrição</v-btn>
-                        <v-btn color="success" outlined depressed @click="addConstraineds">+ Restrição</v-btn>
+                        <v-btn color="error" outlined depressed @click="subConstraineds">- Restr.</v-btn>
+                        <v-btn color="success" outlined depressed @click="addConstraineds">+ Restr.</v-btn>
                     </v-card-text>
                 </v-card>
 
@@ -360,10 +360,11 @@ export default {
             }
 
             // invertendo linha z
-
-            for (let i = 2; i < this.linhas[0].length; i++) {
+            for (let i = 2; i < this.form.f.length + 2; i++) {
                 this.linhas[0][i] *= -1
             }
+
+            this.linhas[0][this.linhas[0].length - 1] *= -1
 
             this.iteracoes.push(this.linhas);
 
@@ -512,12 +513,19 @@ export default {
 
                 // X otimo
 
+                let counter = 1;
                 for (let j = 2; j < this.form.f.length + 2; j++) {
                     for (let i = 1; i < novaLinha.length; i++) {
-                        if(novaLinha[i][j] == 1){
-                            this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
+                        if(novaLinha[i][j] == 1) {
+                            if(novaLinha[i][0].includes("x_" + counter)){
+                                this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
+
+                            } else {
+                                this.resultado.xOtimo.push(0)
+                            }
                         }
                     }
+                    counter ++
                 }
 
                 console.log(this.resultado.xOtimo)
