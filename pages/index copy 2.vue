@@ -462,7 +462,7 @@ export default {
 
             for (let i = 1; i < novaLinha.length; i++) {
                 if(novaLinha[i][novaLinha[i].length - 1] == 0) {
-                        divisao.push(Infinity)
+                        divisao.push(0)
                     } else {
                         if(iteracaoExcesso == false){
                             divisao.push(parseFloat(novaLinha[i][novaLinha[i].length - 1]) / linhaAnterior[i][queEntra + 2]);
@@ -472,11 +472,11 @@ export default {
 
                     }
 
-                // for (let i = 0; i < divisao.length; i++) {
-                //     if(divisao[i] < 0){
-                //         divisao[i] = divisao[i] * -1;
-                //     }
-                // }
+                for (let i = 0; i < divisao.length; i++) {
+                    if(divisao[i] < 0){
+                        divisao[i] = divisao[i] * -1;
+                    }
+                }
             }
 
             console.log(divisao)
@@ -486,7 +486,7 @@ export default {
             var queSai = 0;
 
             for (var i = 0; i < divisao.length; i++) {
-                if (menor > divisao[i] && divisao[i] > 0) {
+                if (menor > divisao[i] ) {
                     menor = divisao[i];
                     queSai = divisao.indexOf(divisao[i])
                 }
@@ -522,7 +522,7 @@ export default {
 
             this.iteracoes.push(novaLinha)
 
-            // mais iterações?
+            //mais iterações?
             let maisiteracoes = false;
 
             if(countNovaLinha0 == 0 && this.countExcessos == 0) {
@@ -531,8 +531,6 @@ export default {
                 maisiteracoes = true;
             }
 
-
-            // this.teste++
             if(maisiteracoes) {
                 this.iteracao(this.iteracoes[this.iteracoes.length - 1])
             } else {
@@ -545,7 +543,7 @@ export default {
 
                         if(novaLinha[i][j] == 1) {
                             if(novaLinha[i][0].includes("x_" + counter)) {
-                                this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
+                                this.resultado.xOtimo.push(Math.round(novaLinha[i][novaLinha[i].length - 1] * 100) / 100)
 
                             } else {
                                 this.resultado.xOtimo.push(0)
@@ -555,10 +553,10 @@ export default {
                     counter ++
                 }
 
-                // this.resultado.xOtimo.forEach(i => {
-                //     console.log(this.isDecimal(this.resultado.xOtimo[i]))
-                // });
-                // console.log(this.resultado.xOtimo)
+                this.resultado.xOtimo.forEach(i => {
+                    console.log(this.isDecimal(this.resultado.xOtimo[i]))
+                });
+                console.log(this.resultado.xOtimo)
 
                 // Z otimo
                 for (let i = 0; i < this.form.f.length; i++) {
@@ -576,51 +574,41 @@ export default {
             }
         },
 
-        // isDecimal(input){
-        //     let regex = /^[-+]?[0-9]+\.[0-9]+$/;
-        //     return (regex.test(input));
-        // },
+        isDecimal(input){
+            let regex = /^[-+]?[0-9]+\.[0-9]+$/;
+            return (regex.test(input));
+        },
 
         calcIntegers() {
             this.valoresInteiros = true
 
-            let maioreMenorQueX = [];
-            let MaioreseMenoresQueX = []
+            let maioresQueX = [];
+            let menoresQueX = [];
 
-            for (let i = 0; i < this.form.f.length; i++) {
-
-                maioreMenorQueX = [];
-
-                    maioreMenorQueX.push(Math.floor(this.resultado.xOtimo[i]))
-                    maioreMenorQueX.push(Math.ceil(this.resultado.xOtimo[i]))
-
-
-                MaioreseMenoresQueX.push(maioreMenorQueX)
+            for (let i = 0; i < this.resultado.xOtimo.length; i++) {
+                maioresQueX.push(Math.round(this.resultado.xOtimo[i]))
+                menoresQueX.push(Math.floor(this.resultado.xOtimo[i]))
             }
 
-            console.log(MaioreseMenoresQueX);
-
-            //combinacoes possiveis
             let combinacoes = []
             let combinacao = []
+            //combinacoes possiveis
+            for (let i = 0; i < menoresQueX.length; i++) {
+                combinacao = []
+                combinacao.push(menoresQueX[i])
+                for (let j = 0; j < maioresQueX.length; j++) {
 
-            for (let i = 1; i < MaioreseMenoresQueX.length; i++) {
-                for (let j = 0; j < MaioreseMenoresQueX[0].length; j++) {
-                    for (let k = 0; k < this.form.f.length; k++) {
-                        let combinacao = []
+                    combinacao.push(maioresQueX[j])
 
-                        combinacao.push(MaioreseMenoresQueX[0][j])
-                        combinacao.push(MaioreseMenoresQueX[i][k])
-
-                        combinacoes.push(combinacao)
-                    }
+                    combinacoes.push(combinacao)
                 }
             }
-
 
             console.log(combinacao)
             console.log(combinacoes)
 
+            console.log(maioresQueX)
+            console.log(menoresQueX)
 
             let resultadoInteiro = 0;
             let zInteiro = 0
@@ -631,33 +619,27 @@ export default {
                 zInteiro = -1
             }
 
-            for (let i = 0; i < combinacoes.length; i++) {
-
-                if(this.wasMIN){
-                    resultadoInteiro = 0
-                    for (let j = 0; j < this.form.f.length; j++) {
-                    resultadoInteiro += (this.form.f[j] * -1) * combinacoes[i][j]
-                        console.log(resultadoInteiro)
-                    }
-                    if(resultadoInteiro > this.resultado.zOtimo && resultadoInteiro < zInteiro){
-                        zInteiro = resultadoInteiro
-                        xInteiro = [];
-                        xInteiro.push(combinacoes[i])
-                    }
-                    } else {
-                        resultadoInteiro = 0
-                        for (let j = 0; j < this.form.f.length; j++) {
-                            resultadoInteiro += this.form.f[j] * combinacoes[i][j]
-                            console.log(resultadoInteiro)
+            for (let i = 0; i < menoresQueX.length; i++) {
+                for (let j = 0; j < maioresQueX.length; j++) {
+                    console.log(resultadoInteiro)
+                    if(this.wasMIN){
+                        resultadoInteiro = (this.form.f[0] * -1) * menoresQueX[i] + (this.form.f[1] * -1) * maioresQueX[j]
+                        if(resultadoInteiro > this.resultado.zOtimo && resultadoInteiro < zInteiro){
+                            zInteiro = resultadoInteiro
+                            xInteiro = [];
+                            xInteiro.push(menoresQueX[i])
+                            xInteiro.push(maioresQueX[j])
                         }
+                    } else {
                         if(resultadoInteiro < this.resultado.zOtimo && resultadoInteiro > zInteiro){
                             zInteiro = resultadoInteiro
                             xInteiro = [];
-                            xInteiro.push(combinacoes[i])
+                            xInteiro.push(menoresQueX[i])
+                            xInteiro.push(maioresQueX[j])
                         }
                     }
-
                 }
+            }
 
             this.resultado.zInteger = zInteiro.toFixed(2);
 
