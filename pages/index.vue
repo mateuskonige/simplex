@@ -35,6 +35,8 @@
 
                                 <v-col v-for="(i, index) in form.f" :key="index">
                                     <v-text-field
+                                        type="number"
+                                        step="0.01"
                                         :label="'x_' + (index + 1)"
                                         v-model.number="form.f[index]"
                                     ></v-text-field>
@@ -51,7 +53,7 @@
                                     <v-col v-for="(j, jndex) in form.constrained[index].vars" :key="jndex">
                                         <v-text-field
                                             type="number"
-                                            step="0.1"
+                                            step="0.01"
                                             :label="'x_' + (jndex + 1)"
                                             v-model.number="form.constrained[index].vars[jndex]"
                                         ></v-text-field>
@@ -119,14 +121,14 @@
                         </v-card-text>
 
                     </v-card>
-                    <v-sheet v-if="!valoresInteiros && !decimal">
+                    <v-sheet v-if="!valoresInteiros">
                             <v-card-text>
                                 <h3 class="mt-4">X* = {{ resultado.xOtimo }}</h3>
                             <h3 class="mt-4">Z* = {{ resultado.zOtimo }}</h3>
                             </v-card-text>
                             <v-card-actions>
                                 <v-spacer></v-spacer>
-                                <v-btn color="secondary" block @click="calcIntegers">Calcular valores inteiros?</v-btn>
+                                <v-btn color="secondary" block v-if="decimal" @click="calcIntegers">Calcular valores inteiros?</v-btn>
                             </v-card-actions>
                     </v-sheet>
                     <v-sheet v-else>
@@ -435,11 +437,9 @@ export default {
                 let linhaZpositivada = [];
 
                 for (let i = 2; i < this.form.constrained[0].vars.length + 2; i++) {
-                    if(novaLinha[0][i] < 0){
+
                         linhaZpositivada.push(novaLinha[0][i] * -1)
-                    } else {
-                        linhaZpositivada.push(novaLinha[0][i])
-                    }
+
                 }
 
                 console.log(linhaZpositivada);
@@ -555,10 +555,12 @@ export default {
                     counter ++
                 }
 
-                // this.resultado.xOtimo.forEach(i => {
-                //     console.log(this.isDecimal(this.resultado.xOtimo[i]))
-                // });
-                // console.log(this.resultado.xOtimo)
+                this.resultado.xOtimo.forEach(i => {
+                    if(this.isDecimal(i) == true ) {
+                        this.decimal = true
+                    }
+                });
+                console.log(this.resultado.xOtimo)
 
                 // Z otimo
                 for (let i = 0; i < this.form.f.length; i++) {
@@ -576,10 +578,10 @@ export default {
             }
         },
 
-        // isDecimal(input){
-        //     let regex = /^[-+]?[0-9]+\.[0-9]+$/;
-        //     return (regex.test(input));
-        // },
+        isDecimal(input){
+            let regex = /^[-+]?[0-9]+\.[0-9]+$/;
+            return (regex.test(input));
+        },
 
         calcIntegers() {
             this.valoresInteiros = true
@@ -602,23 +604,10 @@ export default {
 
             //combinacoes possiveis
             let combinacoes = []
-            let combinacao = []
 
-            for (let i = 1; i < MaioreseMenoresQueX.length; i++) {
-                for (let j = 0; j < MaioreseMenoresQueX[0].length; j++) {
-                    for (let k = 0; k < this.form.f.length; k++) {
-                        let combinacao = []
-
-                        combinacao.push(MaioreseMenoresQueX[0][j])
-                        combinacao.push(MaioreseMenoresQueX[i][k])
-
-                        combinacoes.push(combinacao)
-                    }
-                }
-            }
+            combinacoes = this.combinar(MaioreseMenoresQueX)
 
 
-            console.log(combinacao)
             console.log(combinacoes)
 
 
@@ -664,7 +653,36 @@ export default {
             for (let i = 0; i < xInteiro.length; i++) {
                 this.resultado.xInteger.push(xInteiro[i])
             }
-        }
+        },
+
+        combinar(arraysToCombine) {
+    var divisors = [];
+    for (var i = arraysToCombine.length - 1; i >= 0; i--) {
+       divisors[i] = divisors[i + 1] ? divisors[i + 1] * arraysToCombine[i + 1].length : 1;
+    }
+
+    function getPermutation(n, arraysToCombine) {
+       var result = [],
+           curArray;
+       for (var i = 0; i < arraysToCombine.length; i++) {
+          curArray = arraysToCombine[i];
+          result.push(curArray[Math.floor(n / divisors[i]) % curArray.length]);
+       }
+       return result;
+    }
+
+    var numPerms = arraysToCombine[0].length;
+    for(var i = 1; i < arraysToCombine.length; i++) {
+        numPerms *= arraysToCombine[i].length;
+    }
+
+    var combinations = [];
+    for(var i = 0; i < numPerms; i++) {
+        combinations.push(getPermutation(i, arraysToCombine));
+    }
+    return combinations;
+}
+
     },
 };
 </script>
