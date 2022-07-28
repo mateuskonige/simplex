@@ -121,22 +121,21 @@
                         </v-card-text>
 
                     </v-card>
-                    <v-sheet v-if="!valoresInteiros">
+                    <v-sheet >
                             <v-card-text>
                                 <h3 class="mt-4">X* = {{ resultado.xOtimo }}</h3>
                             <h3 class="mt-4">Z* = {{ resultado.zOtimo }}</h3>
+
                             </v-card-text>
-                            <v-card-actions>
-                                <v-spacer></v-spacer>
-                                <v-btn color="secondary" block v-if="decimal" @click="calcIntegers">Calcular valores inteiros?</v-btn>
-                            </v-card-actions>
-                    </v-sheet>
-                    <v-sheet v-else>
-                        <v-card-text>
+                                <v-card-text v-if="valoresInteiros">
                                 <h3 class="mt-4">X* = {{ resultado.xInteger }}</h3>
                                 <h3 class="mt-4">Z* = {{ resultado.zInteger }}</h3>
                             </v-card-text>
-                            <v-card-actions>
+                            <v-card-actions v-if="!valoresInteiros">
+                                <v-spacer></v-spacer>
+                                <v-btn color="secondary" block v-if="decimal" @click="calcIntegers">Calcular valores inteiros?</v-btn>
+                            </v-card-actions>
+                            <v-card-actions v-else >
                                 <v-spacer></v-spacer>
                                 <v-btn color="secondary" elevation="0" block disabled>Inteiros calculados</v-btn>
                             </v-card-actions>
@@ -161,6 +160,8 @@ export default {
             to: ["<=", "=", ">="],
             linhas: [],
             iteracoes: [],
+
+            duasFases: false,
 
             wasMIN: 0,
             countExcessos: 0,
@@ -324,7 +325,10 @@ export default {
 
                         if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
                             this.linhas[j][this.linhas[j].length - 1] = 1
+
+                            //Cb
                             this.linhas[j][1] = 1
+                            this.duasFases = true
                         }
                     }
                 }
@@ -338,7 +342,9 @@ export default {
 
                         if(this.form.constrained.indexOf(this.form.constrained[i]) + 1 == j){
                             this.linhas[j][this.linhas[j].length - 1] = 1
+
                             this.linhas[j][1] = 1
+                            this.duasFases = true
                         }
 
                         this.linhas[j].push(0)
@@ -365,23 +371,25 @@ export default {
             //PIVO
             this.pivos.push(0)
 
-            for (let i = 0; i < this.linhas.length; i++) {
-                if(this.linhas[i][1] == 1){
-                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
-                        this.linhas[0][j + 2] = 0
-                    }
+            if(this.duasFases){
+                for (let i = 0; i < this.linhas.length; i++) {
+                    if(this.linhas[i][1] == 1){
+                        for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                            this.linhas[0][j + 2] = 0
+                        }
 
-                    this.linhas[0][this.linhas[0].length - 1] = 0
+                        this.linhas[0][this.linhas[0].length - 1] = 0
+                    }
                 }
-            }
 
-            for (let i = 0; i < this.linhas.length; i++) {
-                if(this.linhas[i][1] == 1){
-                    for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
-                        this.linhas[0][j + 2] += this.linhas[i][j + 2]
+                for (let i = 0; i < this.linhas.length; i++) {
+                    if(this.linhas[i][1] == 1){
+                        for (let j = 0; j < this.form.constrained[0].vars.length; j++) {
+                            this.linhas[0][j + 2] += this.linhas[i][j + 2]
+                        }
+
+                        this.linhas[0][this.linhas[0].length - 1] += this.linhas[i][this.linhas[0].length - 1]
                     }
-
-                    this.linhas[0][this.linhas[0].length - 1] += this.linhas[i][this.linhas[0].length - 1]
                 }
             }
 
@@ -402,13 +410,15 @@ export default {
             novaLinha = JSON.parse(JSON.stringify(linhaAnterior));
 
             let iteracaoExcesso = false
+
             let countNovaLinha0 = 0
 
-            for (let i = 2; i < this.form.constrained[0].vars.length + 2; i++) {
-                console.log(novaLinha[0][i])
+            for (let i = 2; i < this.form.f.length + 2; i++) {
+
                 countNovaLinha0 += novaLinha[0][i]
             }
 
+            console.log('countNovaLinha0: ' + countNovaLinha0)
 
             if(countNovaLinha0 == 0 && this.countExcessos > 0){
                 iteracaoExcesso = true
@@ -510,7 +520,7 @@ export default {
             }
 
             novaLinha[queSai][0] = 'x_' + (queEntra - 1)
-            console.log(novaLinha)
+            novaLinha[queSai][1] = 0
 
             for (let i = 0; i < novaLinha.length; i++) {
                 for (let j = 2; j < novaLinha[queSai].length; j++) {
@@ -519,33 +529,95 @@ export default {
                     }
                 }
             }
-
+console.log(novaLinha)
             this.iteracoes.push(novaLinha)
 
             // mais iterações?
             let maisiteracoes = false;
 
-            if(countNovaLinha0 == 0 && this.countExcessos == 0) {
+            console.log('maisiteracoes:' + countNovaLinha0 + ', ' + this.countExcessos + ', ' + this.duasFases)
+
+            if(countNovaLinha0 == 0 && this.countExcessos == 0 && this.duasFases == false) {
                 maisiteracoes = false;
+            } else if(countNovaLinha0 == 0 && this.countExcessos == 0 && this.duasFases == true) {
+
+
+                let linhaZduasFases = JSON.parse(JSON.stringify(novaLinha))
+
+                console.log(linhaZduasFases);
+                console.log(novaLinha);
+
+                let counter = 1;
+                for (let j = 0; j < this.form.f.length; j++) {
+                    for (let i = 1; i < novaLinha.length; i++) {
+
+
+                            if(novaLinha[i][0].includes("x_" + counter)) {
+                                if(this.wasMIN){
+                                    linhaZduasFases[i][1] = this.form.f[j] * -1
+                                } else {
+                                    linhaZduasFases[i][1] = this.form.f[j]
+                                }
+
+                            }
+
+                    }
+                    counter ++
+                }
+
+                for (let i = 2; i < linhaZduasFases[0].length; i++) {
+                    console.log(this.form.f[i-2])
+                    if(this.wasMIN){
+
+                        linhaZduasFases[0][i] = this.form.f[i - 2] ? this.form.f[i - 2] : 0
+                    } else {
+
+                        linhaZduasFases[0][i] = this.form.f[i - 2] ? (this.form.f[i - 2] * -1) : 0
+                    }
+
+                    console.log(linhaZduasFases[0][i])
+                    for (let j = 1; j < linhaZduasFases.length; j++) {
+                        linhaZduasFases[0][i] += linhaZduasFases[j][1] * linhaZduasFases[j][i]
+                    }
+                }
+
+                let sumlinhza = 0
+
+                for (let i = 2; i < this.form.f.length; i++) {
+                    sumlinhza += linhaZduasFases[0][i]
+                }
+                if(sumlinhza != 0){
+                    maisiteracoes = true
+                } else {
+                    maisiteracoes = false
+                }
+
+                this.iteracoes.push(linhaZduasFases)
+
+                this.duasFases = false
+
             } else {
-                maisiteracoes = true;
+                maisiteracoes = true
             }
 
 
-            // this.teste++
-            if(maisiteracoes) {
+            console.log('duasFases: ' + this.duasFases)
+            console.log('maisiteracoes: ' + maisiteracoes)
+
+            this.teste++
+            if(this.teste < 5) {
                 this.iteracao(this.iteracoes[this.iteracoes.length - 1])
             } else {
-
+                let iteracaoFinal = JSON.parse(JSON.stringify(this.iteracoes[this.iteracoes.length - 1]))
                 // X otimo
 
                 let counter = 1;
                 for (let j = 2; j < this.form.f.length + 2; j++) {
-                    for (let i = 1; i < novaLinha.length; i++) {
+                    for (let i = 1; i < iteracaoFinal.length; i++) {
 
-                        if(novaLinha[i][j] == 1) {
-                            if(novaLinha[i][0].includes("x_" + counter)) {
-                                this.resultado.xOtimo.push(novaLinha[i][novaLinha[i].length - 1])
+                        if(iteracaoFinal[i][0].includes("x_" + counter)) {
+                                if(iteracaoFinal[i][j] == 1) {
+                                this.resultado.xOtimo.push(iteracaoFinal[i][iteracaoFinal[i].length - 1])
 
                             } else {
                                 this.resultado.xOtimo.push(0)
@@ -563,13 +635,13 @@ export default {
                 console.log(this.resultado.xOtimo)
 
                 // Z otimo
-                for (let i = 0; i < this.form.f.length; i++) {
-                    this.resultado.zOtimo += this.form.f[i] * this.resultado.xOtimo[i]
-                }
 
-                if(this.resultado.zOtimo < 0) {
-                    this.resultado.zOtimo *= -1
-                }
+                    this.resultado.zOtimo = iteracaoFinal[0][iteracaoFinal[i].length - 1]
+
+
+                // if(this.resultado.zOtimo < 0) {
+                //     this.resultado.zOtimo *= -1
+                // }
 
                 console.log(this.resultado.zOtimo)
 
