@@ -415,12 +415,14 @@ export default {
 
             for (let i = 2; i < this.form.f.length + 2; i++) {
 
-                countNovaLinha0 += novaLinha[0][i]
+                if(novaLinha[0][i] < 0) {
+                    countNovaLinha0 = novaLinha[0][i]
+                }
             }
 
             console.log('countNovaLinha0: ' + countNovaLinha0)
 
-            if(countNovaLinha0 == 0 && this.countExcessos > 0){
+            if(countNovaLinha0 >= 0 && this.countExcessos > 0){
                 iteracaoExcesso = true
             }
 
@@ -537,9 +539,16 @@ console.log(novaLinha)
 
             console.log('maisiteracoes:' + countNovaLinha0 + ', ' + this.countExcessos + ', ' + this.duasFases)
 
-            if(countNovaLinha0 == 0 && this.countExcessos == 0 && this.duasFases == false) {
-                maisiteracoes = false;
-            } else if(countNovaLinha0 == 0 && this.countExcessos == 0 && this.duasFases == true) {
+                countNovaLinha0 = 0
+            for (let i = 2; i < this.form.f.length + 2; i++) {
+                if(novaLinha[0][i] < 0) {
+                    countNovaLinha0 = novaLinha[0][i]
+                }
+            }
+
+            if(countNovaLinha0 < 0 || this.countExcessos > 0) {
+                 maisiteracoes = true;
+            } else if(countNovaLinha0 >= 0 && this.countExcessos == 0 && this.duasFases == true) {
 
 
                 let linhaZduasFases = JSON.parse(JSON.stringify(novaLinha))
@@ -583,10 +592,14 @@ console.log(novaLinha)
 
                 let sumlinhza = 0
 
-                for (let i = 2; i < this.form.f.length; i++) {
-                    sumlinhza += linhaZduasFases[0][i]
+            for (let i = 2; i < this.form.f.length + 2; i++) {
+
+                if(linhaZduasFases[0][i] < 0) {
+                    sumlinhza = linhaZduasFases[0][i]
                 }
-                if(sumlinhza != 0){
+            }
+
+                if(sumlinhza < 0){
                     maisiteracoes = true
                 } else {
                     maisiteracoes = false
@@ -596,36 +609,59 @@ console.log(novaLinha)
 
                 this.duasFases = false
 
-            } else {
-                maisiteracoes = true
+            } else if(countNovaLinha0 >= 0 && this.countExcessos == 0 && this.duasFases == false) {
+                maisiteracoes = false;
             }
 
 
             console.log('duasFases: ' + this.duasFases)
             console.log('maisiteracoes: ' + maisiteracoes)
 
-            this.teste++
-            if(this.teste < 5) {
+
+            if(maisiteracoes) {
                 this.iteracao(this.iteracoes[this.iteracoes.length - 1])
             } else {
                 let iteracaoFinal = JSON.parse(JSON.stringify(this.iteracoes[this.iteracoes.length - 1]))
                 // X otimo
 
+                // let counter = 1;
+                // for (let j = 2; j < this.form.f.length + 2; j++) {
+                //     for (let i = 1; i < iteracaoFinal.length; i++) {
+
+                //         if(iteracaoFinal[i][0].includes("x_" + counter)) {
+
+                //                 this.resultado.xOtimo.push(iteracaoFinal[i][iteracaoFinal[i].length - 1])
+
+                //             } else {
+                //                 this.resultado.xOtimo.push(0)
+                //             }
+
+                //     }
+                //     counter ++
+                // }
+
+
                 let counter = 1;
-                for (let j = 2; j < this.form.f.length + 2; j++) {
-                    for (let i = 1; i < iteracaoFinal.length; i++) {
+                let aux = 0
+                for (let j = 0; j < this.form.f.length; j++) {
+                    aux = 0
+                    for (let i = 1; i < novaLinha.length; i++) {
+                        aux += novaLinha[i][j+2]
+                        console.log('aux: ' + aux);
+                    }
 
-                        if(iteracaoFinal[i][0].includes("x_" + counter)) {
-                                if(iteracaoFinal[i][j] == 1) {
+                    if(aux == 1){
+                        for (let i = 1; i < novaLinha.length; i++) {
+                            if(novaLinha[i][0].includes("x_" + counter)) {
                                 this.resultado.xOtimo.push(iteracaoFinal[i][iteracaoFinal[i].length - 1])
-
-                            } else {
-                                this.resultado.xOtimo.push(0)
                             }
                         }
+                    } else {
+                        this.resultado.xOtimo.push(0)
                     }
                     counter ++
                 }
+
 
                 this.resultado.xOtimo.forEach(i => {
                     if(this.isDecimal(i) == true ) {
