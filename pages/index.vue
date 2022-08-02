@@ -797,7 +797,7 @@ console.log(novaLinha)
                     resultadoInteiro += (this.form.f[j] * -1) * combinacoes[i][j]
                         console.log(resultadoInteiro)
                     }
-                    if(resultadoInteiro > this.resultado.zOtimo && resultadoInteiro < zInteiro){
+                    if(resultadoInteiro >= this.resultado.zOtimo && resultadoInteiro < zInteiro){
                         zInteiro = resultadoInteiro
                         xInteiro = [];
                         xInteiro.push(combinacoes[i])
@@ -808,7 +808,7 @@ console.log(novaLinha)
                             resultadoInteiro += this.form.f[j] * combinacoes[i][j]
                             console.log(resultadoInteiro)
                         }
-                        if(resultadoInteiro < this.resultado.zOtimo && resultadoInteiro > zInteiro){
+                        if(resultadoInteiro <= this.resultado.zOtimo && resultadoInteiro > zInteiro){
                             zInteiro = resultadoInteiro
                             xInteiro = [];
                             xInteiro.push(combinacoes[i])
@@ -817,7 +817,7 @@ console.log(novaLinha)
 
                 }
 
-            this.resultado.zInteger = zInteiro.toFixed(2);
+            this.resultado.zInteger = zInteiro;
 
             for (let i = 0; i < xInteiro.length; i++) {
                 this.resultado.xInteger.push(xInteiro[i])
