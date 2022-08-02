@@ -24,19 +24,20 @@ Interface: Vuetify
                     </v-card-text>
                 </v-sheet>
 
-                <div class="d-flex justify-space-between px-5">
-                    <span>VARIÁVEIS</span>
-                    <span>RESTRIÇÕES</span>
-                </div>
+
 
                 <!-- BOTÕES DE CONTROLE -->
                 <v-card elevation="0">
+                                    <div class="d-flex justify-space-between px-5">
+                    <small>VARIÁVEIS</small>
+                    <small>RESTRIÇÕES</small>
+                </div>
                     <v-card-text class="d-flex">
                         <v-btn color="error" outlined small fab depressed @click="subVars"><v-icon>mdi-chevron-left</v-icon></v-btn>
-                        <v-btn color="success" outlined fab depressed @click="addVars"><v-icon>mdi-chevron-right</v-icon></v-btn>
+                        <v-btn color="success" outlined small fab depressed @click="addVars"><v-icon>mdi-chevron-right</v-icon></v-btn>
                     <v-spacer />
                         <v-btn color="error" outlined small fab depressed @click="subConstraineds"><v-icon>mdi-chevron-up</v-icon></v-btn>
-                        <v-btn color="success" outlined fab depressed @click="addConstraineds"><v-icon>mdi-chevron-down</v-icon></v-btn>
+                        <v-btn color="success" outlined small fab depressed @click="addConstraineds"><v-icon>mdi-chevron-down</v-icon></v-btn>
                     </v-card-text>
                 </v-card>
 
@@ -44,7 +45,7 @@ Interface: Vuetify
                 <!-- INFORMAÇÃO DO PROBLEMA -->
                 <v-sheet>
                     <v-card-text class="text-center">
-                        <h4>O problema tem <v-btn fab small outlined color="black"><b>{{this.form.f.length}}</b></v-btn> variáveis e <v-btn fab small outlined color="black"><b>{{ this.form.constrained.length}}</b></v-btn> restrições</h4>
+                        <span>O problema tem: <br><b>{{this.form.f.length}}</b> variáveis e <b>{{ this.form.constrained.length}}</b> restrições</span>
                     </v-card-text>
                 </v-sheet>
 
@@ -167,7 +168,8 @@ Interface: Vuetify
                                 </tbody>
                             </v-simple-table>
                             <div v-if="indexQueEntra[tableau]">
-                                <span><b>Váriavel que entra na base: {{ 'x_' + (indexQueEntra[tableau] - 1) }}, Váriável que sai da base: {{ x[indexQueSai[tableau]][0] }}</b></span>
+                                <span>Váriavel que <b style="color: blue;">entra</b> na base: <b>{{ 'x_' + (indexQueEntra[tableau] - 1) }}</b> <br>
+                                 Váriável que <b style="color: red;">sai</b> da base: <b>{{ x[indexQueSai[tableau]][0] }}</b></span>
                             </div>
 
                         </v-card-text>
