@@ -1,20 +1,54 @@
+<!--
+Documento de apoio apresentado ao Curso de Bacharelado em Sistemas de Informação,
+da Universidade Estadual de Montes Claros - UNIMONTES,
+como requisito parcial de nota na disciplina de Pesquisa Operacional,
+ministrada pelo professor Lenir de Abreu Júnior.
+
+EQUIPE:
+Enael, George, Lucas Gabriel, Mateus Reis e Mayara
+
+INFORMAÇÕES TÉCNICAS:
+Linguagem: Javascript
+Framework: Vue
+Interface: Vuetify
+-->
+
 <template>
     <v-app dark>
         <v-main>
             <v-container style="max-width: 768px">
 
+                <v-sheet>
+                    <v-card-text class="text-center">
+                        <h1>Simplex</h1>
+                    </v-card-text>
+                </v-sheet>
+
+                <div class="d-flex justify-space-between px-5">
+                    <span>VARIÁVEIS</span>
+                    <span>RESTRIÇÕES</span>
+                </div>
+
                 <!-- BOTÕES DE CONTROLE -->
                 <v-card elevation="0">
                     <v-card-text class="d-flex">
-                        <v-btn color="error" outlined depressed @click="subVars">- Var.</v-btn>
-                        <v-btn color="success" outlined depressed @click="addVars">+ Var.</v-btn>
+                        <v-btn color="error" outlined small fab depressed @click="subVars"><v-icon>mdi-chevron-left</v-icon></v-btn>
+                        <v-btn color="success" outlined fab depressed @click="addVars"><v-icon>mdi-chevron-right</v-icon></v-btn>
                     <v-spacer />
-                        <v-btn color="error" outlined depressed @click="subConstraineds">- Restr.</v-btn>
-                        <v-btn color="success" outlined depressed @click="addConstraineds">+ Restr.</v-btn>
+                        <v-btn color="error" outlined small fab depressed @click="subConstraineds"><v-icon>mdi-chevron-up</v-icon></v-btn>
+                        <v-btn color="success" outlined fab depressed @click="addConstraineds"><v-icon>mdi-chevron-down</v-icon></v-btn>
                     </v-card-text>
                 </v-card>
 
-                <!-- CARD FORM PRINCIPAL -->
+
+                <!-- INFORMAÇÃO DO PROBLEMA -->
+                <v-sheet>
+                    <v-card-text class="text-center">
+                        <h4>O problema tem <v-btn fab small outlined color="black"><b>{{this.form.f.length}}</b></v-btn> variáveis e <v-btn fab small outlined color="black"><b>{{ this.form.constrained.length}}</b></v-btn> restrições</h4>
+                    </v-card-text>
+                </v-sheet>
+
+                <!-- CARD FORMULÁRIO PRINCIPAL -->
                 <v-card elevation="0">
                     <form @submit.prevent="calc()">
                         <v-card-text>
@@ -22,12 +56,13 @@
                             <!-- FUNCÃO Z -->
                             <v-row>
                                 <v-col>
-                                    <v-select :items="items" v-model="form.to">
+                                    <v-select outlined :items="items" v-model="form.to">
                                     </v-select>
                                 </v-col>
 
                                 <v-col>
                                     <v-text-field
+                                        outlined
                                         disabled
                                         value="Z ="
                                     ></v-text-field>
@@ -35,6 +70,7 @@
 
                                 <v-col v-for="(i, index) in form.f" :key="index">
                                     <v-text-field
+                                        outlined
                                         type="number"
                                         step="0.01"
                                         :label="'x_' + (index + 1)"
@@ -47,11 +83,12 @@
                                 <v-col> Sujeito a: </v-col>
                             </v-row>
 
-                            <!-- RESTRICOES -->
+                            <!-- RESTRICÕES -->
                                 <v-row v-for="(i, index) in form.constrained.length" :key="index">
-                                    <!-- RESTRICOES: X -->
+                                    <!-- RESTRICÕES: X -->
                                     <v-col v-for="(j, jndex) in form.constrained[index].vars" :key="jndex">
                                         <v-text-field
+                                            outlined
                                             type="number"
                                             step="0.01"
                                             :label="'x_' + (jndex + 1)"
@@ -59,26 +96,30 @@
                                         ></v-text-field>
                                     </v-col>
 
-                                    <!-- RESTRICOES: <=,>= OU == -->
+                                    <!-- RESTRICÕES: <=,>= OU == -->
                                     <v-col>
                                         <v-select
+                                            outlined
                                             :items="to"
                                             v-model="form.constrained[index].to"
                                         >
                                         </v-select>
                                     </v-col>
 
-                                    <!-- RESTRICOES: CUSTO -->
+                                    <!-- RESTRICÕES: CUSTO -->
                                     <v-col>
                                         <v-text-field
+                                            outlined
                                             type="number"
                                             step="0.1"
                                             v-model.number="form.constrained[index].cost"
+
                                         ></v-text-field>
                                     </v-col>
                                 </v-row>
                         </v-card-text>
 
+                        <!-- BOTÃO CÁLCULO -->
                         <v-card-actions>
                             <v-spacer />
                             <v-btn v-if="!calculated"
@@ -87,17 +128,16 @@
                                 color="primary"
                                 depressed
                                 block
-                                >Calcular (tableau)</v-btn
+                                >Calcular (FORMA TABULAR)</v-btn
                             >
                         </v-card-actions>
                     </form>
                 </v-card>
 
+                <!-- TABELAS -->
                 <div v-if="calculated">
-
                     <v-card class="mb-8" v-for="(x, tableau) in this.iteracoes" :key="tableau">
                         <v-card-title>{{'Iteração ' + tableau }}</v-card-title>
-
                         <v-card-text>
                             <v-simple-table dense>
                                 <thead>
@@ -105,43 +145,56 @@
                                         <th>Base</th>
                                         <th>Cb</th>
                                         <template v-for="(i, index) in x[0].length - 3">
-                                            <th :key="index">{{ 'x_' + (index + 1) }}</th>
+                                            <th :style=" index == (indexQueEntra[tableau] - 2) ? 'color: blue; font-weight: bold;' : ''" :key="index">{{ 'x_' + (index + 1) }}</th>
                                         </template>
                                         <th>b</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="(lines, i) in x" :key="i">
-                                        <td v-for="(li, j) in lines" :key="j">
-                                            {{ li }}
+                                        <td v-for="(li, j) in lines" :key="j" :style="i == indexQueSai[tableau] && j == 0 ? 'color: red; ' : ''">
+                                            <template v-if="j == indexQueEntra[tableau] && i == indexQueSai[tableau]">
+                                            <p style="color: green; font-weight: bold;">{{ li.toFixed(2) }}</p>
+
+                                            </template>
+                                            <template v-else>
+                                            <p >{{ li }}</p>
+
+                                            </template>
+
                                         </td>
                                     </tr>
                                 </tbody>
                             </v-simple-table>
-                        </v-card-text>
+                            <div v-if="indexQueEntra[tableau]">
+                                <span><b>Váriavel que entra na base: {{ 'x_' + (indexQueEntra[tableau] - 1) }}, Váriável que sai da base: {{ x[indexQueSai[tableau]][0] }}</b></span>
+                            </div>
 
+                        </v-card-text>
                     </v-card>
-                    <v-sheet >
+
+                    <v-sheet>
+                            <!-- RESULTADO ÓTIMO -->
                             <v-card-text>
                                 <h3 class="mt-4">X* = {{ resultado.xOtimo }}</h3>
-                            <h3 class="mt-4">Z* = {{ resultado.zOtimo }}</h3>
-
+                                <h3 class="mt-4">Z* = {{ resultado.zOtimo }}</h3>
                             </v-card-text>
-                                <v-card-text v-if="valoresInteiros">
-                                <h3 class="mt-4">X* = {{ resultado.xInteger }}</h3>
+
+                            <!-- RESULTADO ÓTIMO INTEIRO SE POSSÍVEL -->
+                            <v-card-text v-if="valoresInteiros">
+                                <h3 class="mt-4">X* = {{ ...resultado.xInteger }}</h3>
                                 <h3 class="mt-4">Z* = {{ resultado.zInteger }}</h3>
                             </v-card-text>
+
                             <v-card-actions v-if="!valoresInteiros">
                                 <v-spacer></v-spacer>
-                                <v-btn color="secondary" block v-if="decimal" @click="calcIntegers">Calcular valores inteiros?</v-btn>
+                                <v-btn color="secondary" block v-if="decimal" @click="calcIntegers">Encontrar solução inteira</v-btn>
                             </v-card-actions>
                             <v-card-actions v-else >
                                 <v-spacer></v-spacer>
-                                <v-btn color="secondary" elevation="0" block disabled>Inteiros calculados</v-btn>
+                                <v-btn color="secondary" elevation="0" block disabled>Solução inteira calculada</v-btn>
                             </v-card-actions>
                     </v-sheet>
-
-
                 </div>
             </v-container>
         </v-main>
@@ -167,6 +220,9 @@ export default {
             countExcessos: 0,
             indexOfExcessos: [],
 
+            indexQueEntra: [],
+            indexQueSai: [],
+
             teste: 0,
 
             pivos: [],
@@ -180,11 +236,11 @@ export default {
 
             form: {
                 f: [0.4, 0.5],
-                to: "",
+                to: "MIN",
                 constrained: [
                     {
                         vars: [0.3, 0.1],
-                        to: "",
+                        to: "<=",
                         cost: 2.7,
                         folga: [],
                         artificial: [],
@@ -192,7 +248,7 @@ export default {
                     },
                     {
                         vars: [0.5, 0.5],
-                        to: "",
+                        to: "<=",
                         cost: 6,
                         folga: [],
                         artificial: [],
@@ -200,7 +256,7 @@ export default {
                     },
                     {
                         vars: [0.6, 0.4],
-                        to: "",
+                        to: "<=",
                         cost: 6,
                         folga: [],
                         artificial: [],
@@ -241,7 +297,7 @@ export default {
             if(this.form.constrained.length <= 4){
                 const newConstrained = {
                     vars: [0, 0],
-                    to: "",
+                    to: "<=",
                     cost: 0,
                     folga: [],
                     artificial: [],
@@ -512,6 +568,9 @@ export default {
                 queEntra += 2
             }
             queSai += 1
+
+            this.indexQueEntra.push(queEntra);
+            this.indexQueSai.push(queSai);
 
             console.log('queEntraPosicionada: ' + queEntra) //2
             console.log('queSaiPosicionada' + queSai) //1
